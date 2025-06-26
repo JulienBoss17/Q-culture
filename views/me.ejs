@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mon profil</title>
+</head>
+<body>
+  
+  <h1>Mon espace</h1>
+  <h3><%= user.role %></h3>
+  <p>Connecté en tant que : <strong><%= user.username %></strong></p>
+
+  <!-- Affichage de l'avatar -->
+  <div>
+    <img src="/<%= user.avatar %>" alt="Avatar de <%= user.username %>" width="100" height="100" style="border-radius: 50%;">
+  </div>
+
+  <a href="/">Retour à l’accueil</a> |
+  <a href="/logout">Se déconnecter</a>
+</body>
+</html>

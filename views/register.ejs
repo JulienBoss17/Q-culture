@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Inscription</title>
+  <style>
+    .avatar-option {
+      display: inline-block;
+      margin: 10px;
+      text-align: center;
+    }
+    .avatar-option img {
+      border: 2px solid transparent;
+      border-radius: 50%;
+      width: 80px;
+      height: 80px;
+      cursor: pointer;
+    }
+    .avatar-option input[type="radio"]:checked + img {
+      border-color: blue;
+    }
+  </style>
+</head>
+<body>
+  <h1>Créer un compte</h1>
+
+  <% if (error) { %>
+    <p style="color: red;"><%= error %></p>
+  <% } %>
+
+  <form method="POST" action="/register">
+    <label for="username">Nom d’utilisateur :</label>
+    <input type="text" name="username" required><br>
+
+    <label for="password">Mot de passe :</label>
+    <input type="password" name="password" required><br>
+
+    <label>Choisis un avatar :</label><br>
+    <div>
+      <label class="avatar-option">
+        <input type="radio" name="avatar" value="avatars/avatar1.svg" required hidden>
+        <img src="/avatars/avatar1.svg" alt="Avatar 1" onclick="selectAvatar(this)">
+      </label>
+      <label class="avatar-option">
+        <input type="radio" name="avatar" value="avatars/avatar2.svg" hidden>
+        <img src="/avatars/avatar2.svg" alt="Avatar 2" onclick="selectAvatar(this)">
+      </label>
+      <label class="avatar-option">
+        <input type="radio" name="avatar" value="avatars/avatar3.svg" hidden>
+        <img src="/avatars/avatar3.svg" alt="Avatar 3" onclick="selectAvatar(this)">
+      </label>
+    </div>
+
+    <button type="submit">S’inscrire</button>
+  </form>
+
+  <p>Déjà inscrit ? <a href="/login">Se connecter</a></p>
+
+  <script>
+    function selectAvatar(img) {
+      document.querySelectorAll('input[name="avatar"]').forEach(input => input.checked = false);
+      img.previousElementSibling.checked = true;
+    }
+  </script>
+</body>
+</html>

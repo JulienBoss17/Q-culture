@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Connexion</title>
+</head>
+<body>
+  
+  <h1>Se connecter</h1>
+
+  <% if (error) { %>
+    <p style="color: red;"><%= error %></p>
+  <% } %>
+    
+  <form method="POST" action="/login">
+    <label for="username">Nom d’utilisateur:</label>
+    <input type="text" name="username" required /><br>
+
+    <label for="password">Mot de passe:</label>
+    <input type="password" name="password" required /><br>
+
+    <button type="submit">Connexion</button>
+  </form>
+
+  <p>Pas encore inscrit ? <a href="/register">Créer un compte</a></p>
+</body>
+</html>
+

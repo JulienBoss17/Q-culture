@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Room - <%= roomName %></title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    body, html {
+      margin: 0; padding: 0; height: 100vh; width: 100vw;
+      font-family: Arial, sans-serif;
+    }
+
+    /* Popup notification */
+    .popup {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      z-index: 1000;
+      animation: fadeInOut 3s ease-in-out forwards;
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateX(-50%) translateY(0px); }
+      10% { opacity: 1; transform: translateX(-50%) translateY(20px); }
+      90% { opacity: 1; }
+      100% { opacity: 0; transform: translateX(-50%) translateY(0px); }
+    }
+
+    /* Bouton fermer la room */
+    #close-room-btn {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      display: none;
+      cursor: pointer;
+      z-index: 1001;
+      padding: 8px 16px;
+      font-size: 1rem;
+      background-color: #e03a3a;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    #close-room-btn:hover {
+      background-color: #b72a2a;
+    }
+
+    /* Layout global */
+    #container {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    #main-quiz {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      border-right: 1px solid #ccc;
+    }
+
+    #right-panel {
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      box-sizing: border-box;
+      border-left: 1px solid #ccc;
+    }
+
+    #user-list {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      overflow-y: auto;
+      max-height: 120px;
+    }
+
+    #chat-box {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      border-top: 1px solid #ccc;
+      border-bottom: 1px solid #ccc;
+    }
+
+    #typing-indicator {
+      height: 20px;
+      padding: 5px 10px;
+      font-style: italic;
+      font-size: 0.9em;
+    }
+
+    form#chat-form {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ccc;
+    }
+
+    form#chat-form input#msg {
+      flex: 1;
+      padding: 8px;
+      font-size: 1em;
+    }
+
+    form#chat-form button {
+      padding: 8px 15px;
+      margin-left: 8px;
+      cursor: pointer;
+    }
+
+    /* Stylisation du prompt mot de passe */
+    #password-prompt {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      padding: 40px 60px;
+      border-radius: 20px;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+      color: white;
+      text-align: center;
+      font-size: 1.2rem;
+      width: 320px;
+      animation: fadeInScale 0.6s ease forwards;
+      user-select: none;
+      z-index: 1002;
+    }
+
+    @keyframes fadeInScale {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -60%) scale(0.8);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    #password-prompt label {
+      display: block;
+      margin-bottom: 20px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-shadow: 0 0 5px rgba(255,255,255,0.4);
+    }
+
+    #password-input {
+      width: 100%;
+      padding: 12px 15px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      outline: none;
+      box-shadow: inset 0 0 8px rgba(255,255,255,0.3);
+      transition: box-shadow 0.3s ease;
+      background-color: rgba(255 255 255 / 0.1);
+      color: white;
+    }
+
+    #password-input::placeholder {
+      color: #ddd;
+    }
+
+    #password-input:focus {
+      box-shadow: 0 0 12px #ffd700;
+      background-color: #2a3d66;
+      color: white;
+    }
+
+    #join-room-btn {
+      margin-top: 25px;
+      background-color: #ffd700;
+      border: none;
+      padding: 12px 25px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      border-radius: 20px;
+      color: #1a1a1a;
+      cursor: pointer;
+      box-shadow: 0 0 10px #ffd700aa;
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+
+    #join-room-btn:hover {
+      box-shadow: 0 0 20px #fff700ee;
+      transform: translateY(-3px);
+      background-color: #fff700;
+    }
+
+    #join-room-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 0 10px #ffd700cc;
+    }
+  </style>
+</head>
+<body>
+  <%- include('partials/navbar') %>
+  <button id="close-room-btn">Fermer la room</button>
+
+  <div id="password-prompt" role="dialog" aria-modal="true" aria-labelledby="password-label">
+    <label id="password-label" for="password-input">Entrez le mot de passe de la room :</label>
+    <input type="password" id="password-input" placeholder="Mot de passe..." autocomplete="off" aria-required="true" />
+    <button id="join-room-btn" type="button">Rejoindre</button>
+  </div>
+
+  <div id="container" style="display:none;">
+    <div id="main-quiz">
+      <!-- Zone quiz avec points, classement etc -->
+    </div>
+
+    <div id="right-panel">
+      <div id="user-list" style="display:none;">Chargement des utilisateurs...</div>
+      <div id="chat-box" style="display:none;"></div>
+      <div id="typing-indicator"></div>
+      <form id="chat-form" style="display:none;">
+        <input type="text" id="msg" placeholder="Écris un message..." autocomplete="off" />
+        <button type="submit">Envoyer</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const roomName = "<%= roomName %>";
+    const userRole = "<%= user.role %>";
+    const socket = io({ withCredentials: true });
+
+    const chatBox = document.getElementById("chat-box");
+    const userListContainer = document.getElementById("user-list");
+    const typingIndicator = document.getElementById("typing-indicator");
+    const form = document.getElementById("chat-form");
+    const input = document.getElementById("msg");
+    const passwordPrompt = document.getElementById("password-prompt");
+    const passwordInput = document.getElementById("password-input");
+    const joinRoomBtn = document.getElementById("join-room-btn");
+    const closeRoomBtn = document.getElementById("close-room-btn");
+    const container = document.getElementById("container");
+
+    function showPopup(message) {
+      const popup = document.createElement("div");
+      popup.className = "popup";
+      popup.textContent = message;
+      document.body.appendChild(popup);
+      setTimeout(() => popup.remove(), 3000);
+    }
+
+    function joinRoom(password) {
+      socket.emit("joinRoom", { room: roomName, password });
+    }
+
+    joinRoomBtn.addEventListener("click", () => {
+      const pwd = passwordInput.value.trim();
+      if (!pwd) {
+        showPopup("Veuillez entrer un mot de passe.");
+        return;
+      }
+      joinRoom(pwd);
+    });
+
+    passwordInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        joinRoomBtn.click();
+      }
+    });
+
+    closeRoomBtn.addEventListener('click', () => {
+      socket.emit('closeRoom', roomName);
+    });
+
+    socket.on("connect", () => {
+      console.log("Connecté, en attente du mot de passe pour rejoindre la room.");
+    });
+
+    socket.on("chatHistory", (messages) => {
+      passwordPrompt.style.display = "none";
+      container.style.display = "flex";
+
+      chatBox.style.display = "block";
+      userListContainer.style.display = "block";
+      form.style.display = "flex";
+
+      chatBox.innerHTML = "";
+      messages.forEach(msg => {
+        const p = document.createElement("p");
+        p.textContent = `${msg.user || 'Anonyme'}: ${msg.message}`;
+        chatBox.appendChild(p);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      if (userRole === 'admin') {
+        closeRoomBtn.style.display = 'inline-block';
+      }
+    });
+
+    socket.on("chatMessage", (data) => {
+      const p = document.createElement("p");
+      p.textContent = `${data.user || 'Anonyme'}: ${data.message}`;
+      if (data.user === 'System') p.classList.add('system');
+      chatBox.appendChild(p);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    socket.on("userList", (users) => {
+      if (users.length === 0) {
+        userListContainer.textContent = "Aucun utilisateur dans la room.";
+      } else {
+        userListContainer.innerHTML = `Utilisateurs dans la room (${users.length}) : <br>`;
+        users.forEach(u => {
+          userListContainer.innerHTML += 
+            `<div style="display: flex; align-items: center; gap: 10px; margin: 5px 0;">
+              <img src="/${u.avatar}" alt="${u.username}" style="width: 30px; height: 30px; border-radius: 50%;">
+              <strong>${u.username}</strong>
+            </div>`;
+        });
+      }
+    });
+
+    socket.on("notification", (message) => {
+      showPopup(message);
+      if (message.includes('a été fermée par l’admin.')) {
+        setTimeout(() => {
+          window.location.href = '/'; 
+        }, 2000);
+      }
+    });
+
+    socket.on("errorMessage", (msg) => {
+      showPopup(msg);
+    });
+
+    let typingUsers = new Set();
+    let typingClearTimeout;
+
+    socket.on("typing", (user) => {
+      typingUsers.add(user);
+      updateTypingIndicator();
+
+      clearTimeout(typingClearTimeout);
+      typingClearTimeout = setTimeout(() => {
+        typingUsers.clear();
+        updateTypingIndicator();
+      }, 1000);
+    });
+
+    function updateTypingIndicator() {
+      if (typingUsers.size === 0) {
+        typingIndicator.textContent = "";
+      } else {
+        const names = Array.from(typingUsers).join(", ");
+        typingIndicator.textContent = `${names} ${typingUsers.size > 1 ? 'sont' : 'est'} en train d’écrire...`;
+      }
+    }
+
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      const message = input.value.trim();
+      if (message) {
+        socket.emit("sendMessage", { room: roomName, message });
+        input.value = "";
+      }
+    });
+
+    input.addEventListener("input", () => {
+      socket.emit("typing", roomName);
+    });
+
+  </script>
+
+</body>
+</html>
+

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Accueil</title>
+</head>
+<body>
+  <h1>Bienvenue sur Q-Culture</h1>
+
+  <% if (user) { %>
+    <p>Bonjour, <%= user.username %> !</p>
+    <a href="/me">Mon profil</a> |
+    <a href="/logout">Se déconnecter</a>
+  <% } else { %>
+    <a href="/login">Se connecter</a>
+  <% } %>
+
+  <h2>Choisis ton thème :</h2>
+  <ul>
+    <li><a href="/room/general">Culture Générale</a></li>
+    <li><a href="/room/lol">League of Legends</a></li>
+  </ul>
+</body>
+</html>

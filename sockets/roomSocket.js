@@ -226,6 +226,142 @@ async function handleRoomSockets(socket, io, username, role) {
       });
     });
 
+    // --- ÉTAPE PRÉCÉDENTE DE CORRECTION ---
+    socket.on('previousCorrection', () => {
+      if (socket.data.role !== 'admin') {
+        return socket.emit('errorMessage', 'Seul l’admin peut revenir en arrière dans la correction.');
+      }
+
+      const room = socket.data.room;
+      const quiz = quizzesByRoom[room];
+      if (!room || !quiz || !quiz.correctionStarted) return;
+
+      if (quiz.currentCorrectionIndex === 0) {
+        return socket.emit('errorMessage', 'Déjà à la première question.');
+      }
+
+      quiz.currentCorrectionIndex--;
+      const idx = quiz.currentCorrectionIndex;
+
+      io.to(room).emit('previousCorrection', {
+        questionIndex: idx,
+        question: quiz.questions[idx],
+        userAnswers: quiz.answers,
+      });
+    });
+
+    // --- TERMINER MANUELLEMENT LA CORRECTION ---
+    socket.on('endCorrection', () => {
+      if (socket.data.role !== 'admin') {
+        return socket.emit('errorMessage', 'Seul l’admin peut terminer la correction.');
+      }
+
+      const room = socket.data.room;
+      const quiz = quizzesByRoom[room];
+      if (!room || !quiz || !quiz.correctionStarted) return;
+
+      const questions = quiz.questions;
+
+      // Calcul des scores
+      Object.entries(quiz.answers).forEach(([user, answers]) => {
+        let score = 0;
+        answers.forEach((a, i) => {
+          if (a !== undefined && a === questions[i].correctIndex) score++;
+        });
+        quiz.scores[user] = score;
+      });
+
+      io.to(room).emit('notification', 'Correction terminée ! Voici les scores finaux.');
+      io.to(room).emit('showScores', quiz.scores);
+
+      delete quiz.correctionStarted;
+    });
+
+    // Initialiser correctionResults dans startCorrection
+socket.on('startCorrection', () => {
+  if (socket.data.role !== 'admin') {
+    return socket.emit('errorMessage', 'Seul l’admin peut lancer la correction.');
+  }
+
+  const room = socket.data.room;
+  const quiz = quizzesByRoom[room];
+  if (!room || !quiz) return;
+
+  quiz.correctionStarted = true;
+  quiz.currentCorrectionIndex = 0;
+  quiz.correctionResults = new Array(quiz.questions.length).fill(null); // null = non corrigé encore
+
+  io.to(room).emit('startCorrection', {
+    questionIndex: 0,
+    question: quiz.questions[0],
+    userAnswers: quiz.answers,
+  });
+  io.to(room).emit('notification', 'Correction du quiz commencée.');
+});
+
+// Validation d'une réponse corrigée par l'admin
+socket.on('validateCorrectionAnswer', ({ questionIndex }) => {
+  if (socket.data.role !== 'admin') {
+    return socket.emit('errorMessage', 'Seul l’admin peut valider une correction.');
+  }
+
+  const room = socket.data.room;
+  const quiz = quizzesByRoom[room];
+  if (!room || !quiz || !quiz.correctionStarted) return;
+
+  if (typeof questionIndex !== 'number' || questionIndex < 0 || questionIndex >= quiz.questions.length) {
+    return socket.emit('errorMessage', 'Index de question invalide.');
+  }
+
+  // Pour simplifier, on considère que la correction de la réponse est bonne (true).
+  // Tu peux adapter selon ta logique (ex : récupérer la validation réelle côté admin)
+  // Ici, on marque la réponse comme corrigée correctement
+  quiz.correctionResults[questionIndex] = true;
+
+  const isLast = quiz.correctionResults.every(v => v !== null);
+
+  // Calcul des scores si dernière réponse corrigée
+  if (isLast) {
+    const questions = quiz.questions;
+
+    // Calculer les scores en fonction des réponses corrigées
+    Object.entries(quiz.answers).forEach(([user, answers]) => {
+      let score = 0;
+      answers.forEach((a, i) => {
+        if (
+          a !== undefined &&
+          quiz.correctionResults[i] === true && // valide la correction
+          a === questions[i].correctIndex
+        ) {
+          score++;
+        }
+      });
+      quiz.scores[user] = score;
+    });
+
+    // Fin de correction
+    delete quiz.correctionStarted;
+
+    io.to(room).emit('answerCorrectionResult', {
+      questionIndex,
+      answerIndex: quiz.answers, // tu peux adapter si besoin
+      correct: true,
+      lastAnswerToCorrect: true,
+      finalScores: quiz.scores,
+    });
+  } else {
+    // Pas la dernière réponse à corriger
+    io.to(room).emit('answerCorrectionResult', {
+      questionIndex,
+      answerIndex: quiz.answers, // tu peux adapter si besoin
+      correct: true,
+      lastAnswerToCorrect: false,
+      finalScores: null,
+    });
+  }
+});
+
+
   } catch (error) {
     console.error('Erreur dans handleRoomSockets:', error);
     socket.emit('errorMessage', 'Une erreur est survenue côté serveur.');

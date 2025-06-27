@@ -546,40 +546,40 @@ body {
       }
     });
 
-function startQuestionTimer() {
-  clearTimeout(questionTimer);
+    function startQuestionTimer() {
+      clearTimeout(questionTimer);
 
-  const timerDisplay = document.getElementById("question-timer");
-  let secondsLeft = 15;
-  timerDisplay.textContent = `Temps restant : ${secondsLeft} secondes`;
-
-  const interval = setInterval(() => {
-    secondsLeft--;
-    if (secondsLeft <= 0) {
-      clearInterval(interval);
-    } else {
+      const timerDisplay = document.getElementById("question-timer");
+      let secondsLeft = 15;
       timerDisplay.textContent = `Temps restant : ${secondsLeft} secondes`;
-    }
-  }, 1000);
 
-  questionTimer = setTimeout(() => {
-    clearInterval(interval);
-    canAnswer = false;
-    submitAnswerBtn.disabled = true;
-    quizNotification.textContent = "Temps écoulé pour cette question.";
-    timerDisplay.textContent = "Temps écoulé.";
+      const interval = setInterval(() => {
+        secondsLeft--;
+        if (secondsLeft <= 0) {
+          clearInterval(interval);
+        } else {
+          timerDisplay.textContent = `Temps restant : ${secondsLeft} secondes`;
+        }
+      }, 1000);
 
-    if (currentQuestionIndex < quizQuestions.length - 1) {
-      currentQuestionIndex++;
-      showQuestion();
-      startQuestionTimer();
-    } else {
-      socket.emit("startCorrection");
-      mainQuiz.style.display = "none";
-      quizNotification.textContent = "Temps écoulé, en attente de la correction...";
+      questionTimer = setTimeout(() => {
+        clearInterval(interval);
+        canAnswer = false;
+        submitAnswerBtn.disabled = true;
+        quizNotification.textContent = "Temps écoulé pour cette question.";
+        timerDisplay.textContent = "Temps écoulé.";
+
+        if (currentQuestionIndex < quizQuestions.length - 1) {
+          currentQuestionIndex++;
+          showQuestion();
+          startQuestionTimer();
+        } else {
+          socket.emit("startCorrection");
+          mainQuiz.style.display = "none";
+          quizNotification.textContent = "Temps écoulé, en attente de la correction...";
+        }
+      }, 15000);
     }
-  }, 15000);
-}
 
 
     // === Correction (admin) ===
@@ -595,85 +595,136 @@ function startQuestionTimer() {
       showCorrectionQuestion(questionIndex, question, allUserAnswers);
     });
 
-    socket.on("nextCorrection", ({ questionIndex, question, userAnswers: allUserAnswers }) => {
+    socket.on("updateCorrection", ({ questionIndex, question, userAnswers: allUserAnswers }) => {
+      if (userRole !== "admin") return;
       showCorrectionQuestion(questionIndex, question, allUserAnswers);
     });
 
-    socket.on("prevCorrection", ({ questionIndex, question, userAnswers: allUserAnswers }) => {
-      showCorrectionQuestion(questionIndex, question, allUserAnswers);
-    });
+    let correctionCurrentIndex = 0;
+    let correctionAllUserAnswers = [];
+    let correctionQuestions = [];
 
-    socket.on("correctionValidated", (message) => {
-      correctionStatus.textContent = message;
-    });
+    function showCorrectionQuestion(qIndex, question, allUserAnswers) {
+      correctionCurrentIndex = qIndex;
+      correctionQuestions = quizQuestions;
+      correctionAllUserAnswers = allUserAnswers;
 
-socket.on("showScores", (scores) => {
-  console.log("Réception des scores finaux", scores);
-
-  correctionStatus.textContent = "";
-  quizScores.style.display = "block";
-  quizScores.innerHTML = "<h3>Scores finaux :</h3>";
-
-  Object.entries(scores).forEach(([user, score]) => {
-    quizScores.innerHTML += `<div><strong>${user}</strong> : ${score} points</div>`;
-  });
-
-  correctionPanel.style.display = "none";
-  mainQuiz.style.display = "none";
-});
-
-
-    function showCorrectionQuestion(index, question, allUserAnswers) {
-      correctionQuestion.textContent = `Question ${index + 1}: ${question.text}`;
+      correctionQuestion.textContent = `Question ${qIndex + 1} : ${question.text}`;
 
       correctionUserAnswers.innerHTML = "";
-      Object.entries(allUserAnswers).forEach(([username, answerIndex]) => {
-        const userAnswerText = question.answers[answerIndex] || "Pas de réponse";
+      allUserAnswers.forEach(ua => {
         const div = document.createElement("div");
-        div.textContent = `${username} : ${userAnswerText}`;
+        div.textContent = `${ua.username} a répondu : ${ua.answer !== null ? question.answers[ua.answer] : "(pas de réponse)"}`;
         correctionUserAnswers.appendChild(div);
       });
 
-      // Désactiver précédent si index 0
-      prevCorrectionBtn.disabled = index === 0;
-      // Désactiver suivant si dernière question
-      nextCorrectionBtn.disabled = index === quizQuestions.length - 1;
+      prevCorrectionBtn.disabled = qIndex === 0;
+      nextCorrectionBtn.disabled = qIndex === quizQuestions.length - 1;
 
-      // Stockage local de la question en cours pour valider
-      correctionPanel.dataset.currentIndex = index;
+      correctionStatus.textContent = "";
     }
 
     prevCorrectionBtn.addEventListener("click", () => {
-      const idx = Number(correctionPanel.dataset.currentIndex);
-      if (idx > 0) {
-        socket.emit("prevCorrection", idx - 1);
+      if (correctionCurrentIndex > 0) {
+        correctionCurrentIndex--;
+        socket.emit("requestCorrectionQuestion", correctionCurrentIndex);
       }
     });
 
     nextCorrectionBtn.addEventListener("click", () => {
-      const idx = Number(correctionPanel.dataset.currentIndex);
-      if (idx < quizQuestions.length - 1) {
-        socket.emit("nextCorrection", idx + 1);
+      if (correctionCurrentIndex < quizQuestions.length - 1) {
+        correctionCurrentIndex++;
+        socket.emit("requestCorrectionQuestion", correctionCurrentIndex);
       }
     });
 
     validateCorrectionBtn.addEventListener("click", () => {
-      const idx = Number(correctionPanel.dataset.currentIndex);
-      socket.emit("validateCorrection", idx);
+      socket.emit("validateCorrectionQuestion", correctionCurrentIndex);
+      correctionStatus.textContent = "Question validée.";
     });
 
-    // === Socket error handler ===
-
-    socket.on("disconnect", () => {
-      showPopup("Vous avez été déconnecté.");
+    // Score update (client)
+    socket.on("updateScores", (scores) => {
+      if (!scores) {
+        quizScores.textContent = "";
+        return;
+      }
+      const sortedScores = Object.entries(scores).sort((a,b) => b[1] - a[1]);
+      let scoreText = "Scores actuels :\n";
+      sortedScores.forEach(([user, score]) => {
+        scoreText += `${user} : ${score}\n`;
+      });
+      quizScores.textContent = scoreText;
     });
 
-    socket.on("connect_error", () => {
-      showPopup("Erreur de connexion au serveur.");
+
+    // Dès que le serveur demande le mot de passe
+    socket.on("requestPassword", () => {
+      passwordPrompt.style.display = "block";
+      container.style.display = "none";
+      chatBox.style.display = "none";
+      userListContainer.style.display = "none";
+      form.style.display = "none";
+      startQuizBtn.style.display = "none";
+      closeRoomBtn.style.display = "none";
+      mainQuiz.style.display = "none";
+      correctionPanel.style.display = "none";
+      document.getElementById('lobby').style.display = "block";
     });
+
+    // On garde les variables correctionCurrentIndex, correctionAllUserAnswers, correctionQuestions
+
+validateCorrectionBtn.addEventListener("click", () => {
+  // Ici, on envoie la validation au serveur
+  socket.emit("validateCorrectionAnswer", { 
+    questionIndex: correctionCurrentIndex 
+  });
+  correctionStatus.textContent = "Réponse validée, en attente...";
+  correctionStatus.style.color = "black"; // neutre en attente
+});
+
+// On reçoit la validation d'une réponse corrigée, avec info si bonne ou mauvaise
+socket.on("answerCorrectionResult", ({ 
+  questionIndex, 
+  answerIndex, 
+  correct, 
+  lastAnswerToCorrect, 
+  finalScores 
+}) => {
+  // Afficher la couleur en fonction du correct ou pas
+  correctionStatus.textContent = correct ? "Réponse correcte." : "Réponse incorrecte.";
+  correctionStatus.style.color = correct ? "green" : "red";
+
+  if (lastAnswerToCorrect) {
+    // On affiche le classement final
+    mainQuiz.style.display = "none";
+    correctionPanel.style.display = "none";
+    quizNotification.style.color = "black";
+    quizNotification.textContent = "Fin du quiz, classement final :";
+
+    // Formatage des scores dans quizScores
+    let classement = "Classement final :\n";
+    const sortedScores = Object.entries(finalScores).sort((a,b) => b[1] - a[1]);
+    sortedScores.forEach(([user, score], rank) => {
+      classement += `${rank + 1}. ${user} : ${score} points\n`;
+    });
+    quizScores.textContent = classement;
+
+    // On peut aussi masquer le timer/question
+    document.getElementById("question-timer").textContent = "";
+    questionContainer.textContent = "";
+    answersContainer.innerHTML = "";
+    submitAnswerBtn.style.display = "none";
+
+  } else {
+    // Pas la dernière réponse, on peut continuer la correction normalement
+    correctionStatus.textContent += " Continuez la correction.";
+  }
+});
 
   </script>
 </body>
+
 
 
 

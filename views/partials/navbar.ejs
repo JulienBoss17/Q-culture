@@ -1,0 +1,47 @@
+<style>
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 50px;
+  background: #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  z-index: 1100;
+}
+body {
+  padding-top: 50px;
+}
+a {
+  margin-left: 15px;
+  text-decoration: none;
+  color: #000000;
+  font-weight: 600;
+}
+
+a:hover {
+  color: #808080;
+}
+</style>
+
+<nav>
+  <div>
+    <a href="/">Accueil</a>
+  </div>
+  <div>
+    <h3>
+      Q-Culture
+    </h3>
+  </div>
+  <div>
+    <% if (user) { %>
+      <a href="/me">Profil</a>
+      <a href="/logout">Déconnexion</a>
+    <% } else { %>
+      <a href="/register">Créer un compte</a>
+      <a href="/login">Se connecter</a>
+    <% } %>
+  </div>
+</nav>

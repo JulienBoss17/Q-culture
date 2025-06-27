@@ -5,224 +5,278 @@
   <title>Room - <%= roomName %></title>
   <script src="/socket.io/socket.io.js"></script>
   <style>
-    body, html {
-      margin: 0; padding: 0; height: 100vh; width: 100vw;
-      font-family: Arial, sans-serif;
-    }
+/* Reset et base */
+* {
+  box-sizing: border-box;
+}
 
-    /* Popup notification */
-    .popup {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #007bff;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      z-index: 1000;
-      animation: fadeInOut 3s ease-in-out forwards;
-    }
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+}
 
-    @keyframes fadeInOut {
-      0% { opacity: 0; transform: translateX(-50%) translateY(0px); }
-      10% { opacity: 1; transform: translateX(-50%) translateY(20px); }
-      90% { opacity: 1; }
-      100% { opacity: 0; transform: translateX(-50%) translateY(0px); }
-    }
+/* Bouton fermer la room */
+#close-room-btn {
+  display: none; /* caché par défaut */
+  margin: 20px 0;
+  padding: 10px 25px;
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+  align-self: flex-start;
+}
 
-    /* Bouton fermer la room */
-    #close-room-btn {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      display: none;
-      cursor: pointer;
-      z-index: 1001;
-      padding: 8px 16px;
-      font-size: 1rem;
-      background-color: #e03a3a;
-      color: white;
-      border: none;
-      border-radius: 5px;
-    }
-    #close-room-btn:hover {
-      background-color: #b72a2a;
-    }
+#close-room-btn:hover {
+  background-color: #e03e3e;
+}
 
-    /* Layout global */
-    #container {
-      display: flex;
-      height: 100vh;
-      width: 100vw;
-    }
 
-    #main-quiz {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-      border-right: 1px solid #ccc;
-    }
+/* Fenêtre mot de passe centrée */
+#password-prompt {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  padding: 30px 40px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 320px;
+  z-index: 1000;
+}
 
-    #right-panel {
-      width: 320px;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      box-sizing: border-box;
-      border-left: 1px solid #ccc;
-    }
+#password-prompt label {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
 
-    #user-list {
-      padding: 10px;
-      border-bottom: 1px solid #ccc;
-      overflow-y: auto;
-      max-height: 120px;
-    }
+#password-prompt input[type="password"] {
+  padding: 10px 12px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  outline-offset: 2px;
+  transition: border-color 0.3s ease;
+}
 
-    #chat-box {
-      flex: 1;
-      padding: 10px;
-      overflow-y: auto;
-      border-top: 1px solid #ccc;
-      border-bottom: 1px solid #ccc;
-    }
+#password-prompt input[type="password"]:focus {
+  border-color: #0078d4;
+}
 
-    #typing-indicator {
-      height: 20px;
-      padding: 5px 10px;
-      font-style: italic;
-      font-size: 0.9em;
-    }
+#join-room-btn {
+  padding: 10px;
+  background-color: #0078d4;
+  border: none;
+  color: white;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
 
-    form#chat-form {
-      display: flex;
-      padding: 10px;
-      border-top: 1px solid #ccc;
-    }
+#join-room-btn:hover {
+  background-color: #005fa3;
+}
 
-    form#chat-form input#msg {
-      flex: 1;
-      padding: 8px;
-      font-size: 1em;
-    }
+/* Container principal (quiz + chat) */
+#container {
+  display: flex;
+  width: 90%;
+  max-width: 1200px;
+  gap: 25px;
+  margin-bottom: 40px;
+}
 
-    form#chat-form button {
-      padding: 8px 15px;
-      margin-left: 8px;
-      cursor: pointer;
-    }
+/* Partie quiz */
+#main-quiz {
+  flex-grow: 1;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  min-height: 500px; /* à ajuster selon contenu */
+}
 
-    /* Stylisation du prompt mot de passe */
-    #password-prompt {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: linear-gradient(135deg, #1e3c72, #2a5298);
-      padding: 40px 60px;
-      border-radius: 20px;
-      box-shadow: 0 15px 30px rgba(0,0,0,0.4);
-      color: white;
-      text-align: center;
-      font-size: 1.2rem;
-      width: 320px;
-      animation: fadeInScale 0.6s ease forwards;
-      user-select: none;
-      z-index: 1002;
-    }
+/* Panel droit (utilisateurs + chat) */
+#right-panel {
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
-    @keyframes fadeInScale {
-      0% {
-        opacity: 0;
-        transform: translate(-50%, -60%) scale(0.8);
-      }
-      100% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-      }
-    }
+/* Liste utilisateurs */
+#user-list {
+  max-height: 300px;  /* ou la hauteur que tu souhaites */
+  overflow-y: auto;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
 
-    #password-prompt label {
-      display: block;
-      margin-bottom: 20px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-shadow: 0 0 5px rgba(255,255,255,0.4);
-    }
 
-    #password-input {
-      width: 100%;
-      padding: 12px 15px;
-      border: none;
-      border-radius: 12px;
-      font-size: 1rem;
-      outline: none;
-      box-shadow: inset 0 0 8px rgba(255,255,255,0.3);
-      transition: box-shadow 0.3s ease;
-      background-color: rgba(255 255 255 / 0.1);
-      color: white;
-    }
+/* Chat box */
+#chat-box {
+  height: 400px;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  overflow-y: auto;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
 
-    #password-input::placeholder {
-      color: #ddd;
-    }
+#chat-box p {
+  margin: 6px 0;
+}
 
-    #password-input:focus {
-      box-shadow: 0 0 12px #ffd700;
-      background-color: #2a3d66;
-      color: white;
-    }
+#chat-box p.system {
+  font-style: italic;
+  color: #888;
+}
 
-    #join-room-btn {
-      margin-top: 25px;
-      background-color: #ffd700;
-      border: none;
-      padding: 12px 25px;
-      font-weight: 700;
-      font-size: 1.1rem;
-      border-radius: 20px;
-      color: #1a1a1a;
-      cursor: pointer;
-      box-shadow: 0 0 10px #ffd700aa;
-      transition: all 0.3s ease;
-      user-select: none;
-    }
+/* Indicateur de saisie */
+#typing-indicator {
+  min-height: 20px;
+  font-style: italic;
+  color: #666;
+  font-size: 0.9rem;
+  padding-left: 5px;
+  height: 24px;
+}
 
-    #join-room-btn:hover {
-      box-shadow: 0 0 20px #fff700ee;
-      transform: translateY(-3px);
-      background-color: #fff700;
-    }
+/* Formulaire de chat */
+#chat-form {
+  display: flex;
+  gap: 10px;
+}
 
-    #join-room-btn:active {
-      transform: translateY(0);
-      box-shadow: 0 0 10px #ffd700cc;
-    }
+#chat-form input[type="text"] {
+  flex-grow: 1;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  outline-offset: 2px;
+  transition: border-color 0.3s ease;
+}
+
+#chat-form input[type="text"]:focus {
+  border-color: #0078d4;
+}
+
+#chat-form button {
+  padding: 10px 20px;
+  background-color: #0078d4;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#chat-form button:hover {
+  background-color: #005fa3;
+}
+
+/* Popup notification */
+.popup {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: white;
+  padding: 10px 25px;
+  border-radius: 25px;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  animation: popupFade 3.5s forwards;
+  z-index: 1100;
+}
+
+@keyframes popupFade {
+  0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  90% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+}
+
+/* Images avatars utilisateurs */
+#user-list img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #ddd;
+}
+
   </style>
 </head>
 <body>
   <%- include('partials/navbar') %>
-  <button id="close-room-btn">Fermer la room</button>
 
+  <!-- LOBBY -->
+  <div id="lobby" style="margin-top:20px;">
+    <h2>Lobby</h2>
+    <div id="waiting-message">En attente du démarrage du quiz par l’admin...</div>
+    <button id="start-quiz-btn" style="display: none;">Lancer le quiz</button>
+  </div>
+
+  <button id="close-room-btn" style="display:none;">Fermer la room</button>
+
+  <!-- PASSWORD PROMPT -->
   <div id="password-prompt" role="dialog" aria-modal="true" aria-labelledby="password-label">
     <label id="password-label" for="password-input">Entrez le mot de passe de la room :</label>
     <input type="password" id="password-input" placeholder="Mot de passe..." autocomplete="off" aria-required="true" />
     <button id="join-room-btn" type="button">Rejoindre</button>
   </div>
 
-  <div id="container" style="display:none;">
-    <div id="main-quiz">
-      <!-- Zone quiz avec points, classement etc -->
+  <!-- MAIN QUIZ CONTAINER -->
+  <div id="container" style="display:none; flex-direction: row; gap: 20px;">
+    <div id="main-quiz" style="display: none; border:1px solid #ccc; padding:10px; margin-top:20px; max-width: 600px;" aria-live="polite" role="region" aria-label="Quiz principal">
+      <div id="quiz-info" style="margin-bottom: 10px; font-weight:bold;"></div>
+      <div id="question-timer" style="margin-bottom:10px; font-weight: bold; color: red;"></div>
+      <div id="question-container" style="margin-bottom:10px;"></div>
+      <div id="answers-container" style="margin-bottom:10px;"></div>
+      <button id="submit-answer" disabled>Valider ma réponse</button>
+      <div id="quiz-notification" style="margin-top:10px; color: green;"></div>
+      <div id="quiz-scores" style="margin-top:15px; font-weight: bold;"></div>
     </div>
 
-    <div id="right-panel">
-      <div id="user-list" style="display:none;">Chargement des utilisateurs...</div>
-      <div id="chat-box" style="display:none;"></div>
-      <div id="typing-indicator"></div>
-      <form id="chat-form" style="display:none;">
-        <input type="text" id="msg" placeholder="Écris un message..." autocomplete="off" />
+    <div id="correction-panel" style="display:none; border:1px solid #f90; padding:10px; margin-top:20px; max-width: 600px;">
+      <h3>Correction (admin seulement)</h3>
+      <div id="correction-question"></div>
+      <div id="correction-user-answers" style="margin-top:10px; max-height: 300px; overflow-y: auto; border:1px solid #ddd; padding:5px;"></div>
+      <button id="prev-correction-btn" disabled>Question précédente</button>
+      <button id="validate-correction-btn">Valider cette question</button>
+      <button id="next-correction-btn">Question suivante</button>
+      <div id="correction-status" style="margin-top:10px; color: green;"></div>
+    </div>
+
+    <div id="right-panel" style="flex-grow: 1;">
+      <div id="user-list" style="display:none; margin-bottom: 20px;">Chargement des utilisateurs...</div>
+      <div id="chat-box" style="display:none; max-height: 400px; overflow-y: auto; border:1px solid #ccc; padding:10px; margin-bottom: 10px;"></div>
+      <div id="typing-indicator" style="height: 20px; margin-bottom: 10px;"></div>
+      <form id="chat-form" style="display:none; gap: 5px; display: flex;">
+        <input type="text" id="msg" placeholder="Écris un message..." autocomplete="off" style="flex-grow:1;"/>
         <button type="submit">Envoyer</button>
       </form>
     </div>
@@ -233,6 +287,7 @@
     const userRole = "<%= user.role %>";
     const socket = io({ withCredentials: true });
 
+    // DOM Elements
     const chatBox = document.getElementById("chat-box");
     const userListContainer = document.getElementById("user-list");
     const typingIndicator = document.getElementById("typing-indicator");
@@ -243,15 +298,41 @@
     const joinRoomBtn = document.getElementById("join-room-btn");
     const closeRoomBtn = document.getElementById("close-room-btn");
     const container = document.getElementById("container");
+    const startQuizBtn = document.getElementById("start-quiz-btn");
 
+    const mainQuiz = document.getElementById("main-quiz");
+    const quizInfo = document.getElementById("quiz-info");
+    const questionContainer = document.getElementById("question-container");
+    const answersContainer = document.getElementById("answers-container");
+    const submitAnswerBtn = document.getElementById("submit-answer");
+    const quizNotification = document.getElementById("quiz-notification");
+    const quizScores = document.getElementById("quiz-scores");
+
+    const correctionPanel = document.getElementById("correction-panel");
+    const correctionQuestion = document.getElementById("correction-question");
+    const correctionUserAnswers = document.getElementById("correction-user-answers");
+    const prevCorrectionBtn = document.getElementById("prev-correction-btn");
+    const nextCorrectionBtn = document.getElementById("next-correction-btn");
+    const validateCorrectionBtn = document.getElementById("validate-correction-btn");
+    const correctionStatus = document.getElementById("correction-status");
+
+    // Variables
+    let quizQuestions = [];
+    let currentQuestionIndex = 0;
+    let userAnswers = []; // pour stocker localement les réponses du user (index des réponses)
+    let questionTimer = null;
+    let canAnswer = true; // interdit de répondre plusieurs fois par question
+
+    // Fonction popup
     function showPopup(message) {
       const popup = document.createElement("div");
       popup.className = "popup";
       popup.textContent = message;
       document.body.appendChild(popup);
-      setTimeout(() => popup.remove(), 3000);
+      setTimeout(() => popup.remove(), 3500);
     }
 
+    // Join room
     function joinRoom(password) {
       socket.emit("joinRoom", { room: roomName, password });
     }
@@ -273,6 +354,10 @@
 
     closeRoomBtn.addEventListener('click', () => {
       socket.emit('closeRoom', roomName);
+    });
+
+    startQuizBtn.addEventListener('click', () => {
+      socket.emit('startQuiz');
     });
 
     socket.on("connect", () => {
@@ -297,6 +382,7 @@
 
       if (userRole === 'admin') {
         closeRoomBtn.style.display = 'inline-block';
+        startQuizBtn.style.display = 'inline-block';
       }
     });
 
@@ -372,8 +458,223 @@
       socket.emit("typing", roomName);
     });
 
+    // === Quiz logic ===
+
+    socket.on("startQuiz", (questions) => {
+      if (!questions || questions.length === 0) {
+        showPopup("Aucune question disponible.");
+        return;
+      }
+
+      quizQuestions = questions;
+      currentQuestionIndex = 0;
+      userAnswers = new Array(questions.length).fill(null);
+      mainQuiz.style.display = "block";
+      correctionPanel.style.display = "none";
+      document.getElementById('lobby').style.display = "none";
+      quizScores.textContent = "";
+      quizNotification.textContent = "";
+
+      showQuestion();
+      startQuestionTimer();
+    });
+
+    function showQuestion() {
+      canAnswer = true;
+      quizNotification.textContent = "";
+
+      const question = quizQuestions[currentQuestionIndex];
+      if (!question) return;
+
+      quizInfo.textContent = `Question ${currentQuestionIndex + 1} / ${quizQuestions.length}`;
+      questionContainer.textContent = question.text;
+
+      answersContainer.innerHTML = "";
+      question.answers.forEach((answer, index) => {
+        const btn = document.createElement("button");
+        btn.textContent = answer;
+        btn.className = "answer-btn";
+        btn.disabled = false;
+        btn.dataset.index = index;
+        if (userAnswers[currentQuestionIndex] === index) {
+          btn.disabled = true;
+        }
+        btn.onclick = () => {
+          if (!canAnswer) return;
+          // Désélectionner les autres boutons
+          document.querySelectorAll(".answer-btn").forEach(b => {
+            b.disabled = false;
+            delete b.dataset.selected;
+          });
+          btn.disabled = true;
+          btn.dataset.selected = "true";
+          submitAnswerBtn.disabled = false;
+        };
+        answersContainer.appendChild(btn);
+      });
+
+      submitAnswerBtn.disabled = userAnswers[currentQuestionIndex] !== null;
+    }
+
+    submitAnswerBtn.addEventListener("click", () => {
+      if (!canAnswer) return;
+      const selectedBtn = [...document.querySelectorAll(".answer-btn")].find(b => b.dataset.selected === "true");
+      if (!selectedBtn) return;
+
+      const answerIndex = Number(selectedBtn.dataset.index);
+      // Envoyer la réponse au serveur
+      socket.emit("submitAnswer", { qIndex: currentQuestionIndex, answerIndex });
+      userAnswers[currentQuestionIndex] = answerIndex;
+
+      quizNotification.textContent = "Réponse envoyée !";
+      submitAnswerBtn.disabled = true;
+      canAnswer = false;
+
+      // Stop timer
+      clearTimeout(questionTimer);
+
+      // Passer à la question suivante ou lancer correction si fin
+      if (currentQuestionIndex < quizQuestions.length - 1) {
+        currentQuestionIndex++;
+        showQuestion();
+        startQuestionTimer();
+      } else {
+        // Fin des questions, prévenir serveur de démarrer la correction
+        socket.emit("startCorrection");
+        mainQuiz.style.display = "none";
+        quizNotification.textContent = "Toutes les questions ont été répondues, en attente de la correction...";
+      }
+    });
+
+function startQuestionTimer() {
+  clearTimeout(questionTimer);
+
+  const timerDisplay = document.getElementById("question-timer");
+  let secondsLeft = 15;
+  timerDisplay.textContent = `Temps restant : ${secondsLeft} secondes`;
+
+  const interval = setInterval(() => {
+    secondsLeft--;
+    if (secondsLeft <= 0) {
+      clearInterval(interval);
+    } else {
+      timerDisplay.textContent = `Temps restant : ${secondsLeft} secondes`;
+    }
+  }, 1000);
+
+  questionTimer = setTimeout(() => {
+    clearInterval(interval);
+    canAnswer = false;
+    submitAnswerBtn.disabled = true;
+    quizNotification.textContent = "Temps écoulé pour cette question.";
+    timerDisplay.textContent = "Temps écoulé.";
+
+    if (currentQuestionIndex < quizQuestions.length - 1) {
+      currentQuestionIndex++;
+      showQuestion();
+      startQuestionTimer();
+    } else {
+      socket.emit("startCorrection");
+      mainQuiz.style.display = "none";
+      quizNotification.textContent = "Temps écoulé, en attente de la correction...";
+    }
+  }, 15000);
+}
+
+
+    // === Correction (admin) ===
+
+    socket.on("startCorrection", ({ questionIndex, question, userAnswers: allUserAnswers }) => {
+      if (userRole !== "admin") return; // Seulement admin
+
+      correctionPanel.style.display = "block";
+      mainQuiz.style.display = "none";
+      quizNotification.textContent = "";
+      quizScores.textContent = "";
+
+      showCorrectionQuestion(questionIndex, question, allUserAnswers);
+    });
+
+    socket.on("nextCorrection", ({ questionIndex, question, userAnswers: allUserAnswers }) => {
+      showCorrectionQuestion(questionIndex, question, allUserAnswers);
+    });
+
+    socket.on("prevCorrection", ({ questionIndex, question, userAnswers: allUserAnswers }) => {
+      showCorrectionQuestion(questionIndex, question, allUserAnswers);
+    });
+
+    socket.on("correctionValidated", (message) => {
+      correctionStatus.textContent = message;
+    });
+
+socket.on("showScores", (scores) => {
+  console.log("Réception des scores finaux", scores);
+
+  correctionStatus.textContent = "";
+  quizScores.style.display = "block";
+  quizScores.innerHTML = "<h3>Scores finaux :</h3>";
+
+  Object.entries(scores).forEach(([user, score]) => {
+    quizScores.innerHTML += `<div><strong>${user}</strong> : ${score} points</div>`;
+  });
+
+  correctionPanel.style.display = "none";
+  mainQuiz.style.display = "none";
+});
+
+
+    function showCorrectionQuestion(index, question, allUserAnswers) {
+      correctionQuestion.textContent = `Question ${index + 1}: ${question.text}`;
+
+      correctionUserAnswers.innerHTML = "";
+      Object.entries(allUserAnswers).forEach(([username, answerIndex]) => {
+        const userAnswerText = question.answers[answerIndex] || "Pas de réponse";
+        const div = document.createElement("div");
+        div.textContent = `${username} : ${userAnswerText}`;
+        correctionUserAnswers.appendChild(div);
+      });
+
+      // Désactiver précédent si index 0
+      prevCorrectionBtn.disabled = index === 0;
+      // Désactiver suivant si dernière question
+      nextCorrectionBtn.disabled = index === quizQuestions.length - 1;
+
+      // Stockage local de la question en cours pour valider
+      correctionPanel.dataset.currentIndex = index;
+    }
+
+    prevCorrectionBtn.addEventListener("click", () => {
+      const idx = Number(correctionPanel.dataset.currentIndex);
+      if (idx > 0) {
+        socket.emit("prevCorrection", idx - 1);
+      }
+    });
+
+    nextCorrectionBtn.addEventListener("click", () => {
+      const idx = Number(correctionPanel.dataset.currentIndex);
+      if (idx < quizQuestions.length - 1) {
+        socket.emit("nextCorrection", idx + 1);
+      }
+    });
+
+    validateCorrectionBtn.addEventListener("click", () => {
+      const idx = Number(correctionPanel.dataset.currentIndex);
+      socket.emit("validateCorrection", idx);
+    });
+
+    // === Socket error handler ===
+
+    socket.on("disconnect", () => {
+      showPopup("Vous avez été déconnecté.");
+    });
+
+    socket.on("connect_error", () => {
+      showPopup("Erreur de connexion au serveur.");
+    });
+
   </script>
-
 </body>
-</html>
 
+
+
+</html>

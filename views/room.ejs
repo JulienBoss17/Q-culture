@@ -4,232 +4,10 @@
   <meta charset="UTF-8" />
   <title>Room - <%= roomName %></title>
   <script src="/socket.io/socket.io.js"></script>
-  <style>
-/* Reset et base */
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  background-color: #f4f4f4;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
-}
-
-/* Bouton fermer la room */
-#close-room-btn {
-  display: none; /* caché par défaut */
-  margin: 20px 0;
-  padding: 10px 25px;
-  background-color: #ff4d4d;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.3s ease;
-  align-self: flex-start;
-}
-
-#close-room-btn:hover {
-  background-color: #e03e3e;
-}
-
-
-/* Fenêtre mot de passe centrée */
-#password-prompt {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #fff;
-  padding: 30px 40px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  width: 320px;
-  z-index: 1000;
-}
-
-#password-prompt label {
-  font-weight: 600;
-  font-size: 1.1rem;
-  margin-bottom: 8px;
-}
-
-#password-prompt input[type="password"] {
-  padding: 10px 12px;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  outline-offset: 2px;
-  transition: border-color 0.3s ease;
-}
-
-#password-prompt input[type="password"]:focus {
-  border-color: #0078d4;
-}
-
-#join-room-btn {
-  padding: 10px;
-  background-color: #0078d4;
-  border: none;
-  color: white;
-  border-radius: 5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-#join-room-btn:hover {
-  background-color: #005fa3;
-}
-
-/* Container principal (quiz + chat) */
-#container {
-  display: flex;
-  width: 90%;
-  max-width: 1200px;
-  gap: 25px;
-  margin-bottom: 40px;
-}
-
-/* Partie quiz */
-#main-quiz {
-  flex-grow: 1;
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  min-height: 500px; /* à ajuster selon contenu */
-}
-
-/* Panel droit (utilisateurs + chat) */
-#right-panel {
-  width: 320px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* Liste utilisateurs */
-#user-list {
-  max-height: 300px;  /* ou la hauteur que tu souhaites */
-  overflow-y: auto;
-  background: white;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  font-size: 0.95rem;
-  line-height: 1.4;
-}
-
-
-/* Chat box */
-#chat-box {
-  height: 400px;
-  background: white;
-  padding: 15px;
-  border-radius: 8px;
-  overflow-y: auto;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  font-size: 0.95rem;
-  line-height: 1.4;
-}
-
-#chat-box p {
-  margin: 6px 0;
-}
-
-#chat-box p.system {
-  font-style: italic;
-  color: #888;
-}
-
-/* Indicateur de saisie */
-#typing-indicator {
-  min-height: 20px;
-  font-style: italic;
-  color: #666;
-  font-size: 0.9rem;
-  padding-left: 5px;
-  height: 24px;
-}
-
-/* Formulaire de chat */
-#chat-form {
-  display: flex;
-  gap: 10px;
-}
-
-#chat-form input[type="text"] {
-  flex-grow: 1;
-  padding: 10px 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 1rem;
-  outline-offset: 2px;
-  transition: border-color 0.3s ease;
-}
-
-#chat-form input[type="text"]:focus {
-  border-color: #0078d4;
-}
-
-#chat-form button {
-  padding: 10px 20px;
-  background-color: #0078d4;
-  border: none;
-  color: white;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-#chat-form button:hover {
-  background-color: #005fa3;
-}
-
-/* Popup notification */
-.popup {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #333;
-  color: white;
-  padding: 10px 25px;
-  border-radius: 25px;
-  font-size: 0.95rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  animation: popupFade 3.5s forwards;
-  z-index: 1100;
-}
-
-@keyframes popupFade {
-  0% { opacity: 1; transform: translateX(-50%) translateY(0); }
-  90% { opacity: 1; }
-  100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-}
-
-/* Images avatars utilisateurs */
-#user-list img {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid #ddd;
-}
-
-  </style>
 </head>
+<style>
+  
+</style>
 <body>
   <%- include('partials/navbar') %>
 
@@ -262,14 +40,30 @@ body {
     </div>
 
     <div id="correction-panel" style="display:none; border:1px solid #f90; padding:10px; margin-top:20px; max-width: 600px;">
-      <h3>Correction (admin seulement)</h3>
+      <h3>Vue sur les réponses</h3>
       <div id="correction-question"></div>
       <div id="correction-user-answers" style="margin-top:10px; max-height: 300px; overflow-y: auto; border:1px solid #ddd; padding:5px;"></div>
       <button id="prev-correction-btn" disabled>Question précédente</button>
-      <button id="validate-correction-btn">Valider cette question</button>
+      <!-- <button id="validate-correction-btn">Valider cette question</button> -->
       <button id="next-correction-btn">Question suivante</button>
       <div id="correction-status" style="margin-top:10px; color: green;"></div>
     </div>
+
+    <!-- Classement final -->
+<div id="final-ranking" class="overlay" style="display:none; margin-top: 20px; border:1px solid #666; padding: 15px; max-width: 600px;">
+  <h3>Classement final des joueurs</h3>
+  <table id="ranking-table" style="width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr>
+        <th style="border-bottom: 1px solid #ccc; padding: 5px;">Rank</th>
+        <th style="border-bottom: 1px solid #ccc; padding: 5px;">Joueur</th>
+        <th style="border-bottom: 1px solid #ccc; padding: 5px;">Score</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
 
     <div id="right-panel" style="flex-grow: 1;">
       <div id="user-list" style="display:none; margin-bottom: 20px;">Chargement des utilisateurs...</div>
@@ -313,7 +107,7 @@ body {
     const correctionUserAnswers = document.getElementById("correction-user-answers");
     const prevCorrectionBtn = document.getElementById("prev-correction-btn");
     const nextCorrectionBtn = document.getElementById("next-correction-btn");
-    const validateCorrectionBtn = document.getElementById("validate-correction-btn");
+    // const validateCorrectionBtn = document.getElementById("validate-correction-btn");
     const correctionStatus = document.getElementById("correction-status");
 
     // Variables
@@ -322,6 +116,7 @@ body {
     let userAnswers = []; // pour stocker localement les réponses du user (index des réponses)
     let questionTimer = null;
     let canAnswer = true; // interdit de répondre plusieurs fois par question
+    let questionInterval = null; // nouvelle variable
 
     // Fonction popup
     function showPopup(message) {
@@ -460,267 +255,279 @@ body {
 
     // === Quiz logic ===
 
-    socket.on("startQuiz", (questions) => {
-      if (!questions || questions.length === 0) {
-        showPopup("Aucune question disponible.");
-        return;
-      }
+socket.on("startQuiz", (questions) => {
+  if (!questions?.length) {
+    showPopup("Aucune question disponible.");
+    return;
+  }
 
-      quizQuestions = questions;
-      currentQuestionIndex = 0;
-      userAnswers = new Array(questions.length).fill(null);
-      mainQuiz.style.display = "block";
-      correctionPanel.style.display = "none";
-      document.getElementById('lobby').style.display = "none";
-      quizScores.textContent = "";
-      quizNotification.textContent = "";
+  quizQuestions = questions;
+  currentQuestionIndex = 0;
+  userAnswers = new Array(quizQuestions.length).fill(null);
+  document.getElementById("lobby").style.display = "none";
+  mainQuiz.style.display = "block";
+  correctionPanel.style.display = "none";
+  quizNotification.textContent = "";
+  quizScores.textContent = "";
 
-      showQuestion();
-      startQuestionTimer();
-    });
-
-    function showQuestion() {
-      canAnswer = true;
-      quizNotification.textContent = "";
-
-      const question = quizQuestions[currentQuestionIndex];
-      if (!question) return;
-
-      quizInfo.textContent = `Question ${currentQuestionIndex + 1} / ${quizQuestions.length}`;
-      questionContainer.textContent = question.text;
-
-      answersContainer.innerHTML = "";
-      question.answers.forEach((answer, index) => {
-        const btn = document.createElement("button");
-        btn.textContent = answer;
-        btn.className = "answer-btn";
-        btn.disabled = false;
-        btn.dataset.index = index;
-        if (userAnswers[currentQuestionIndex] === index) {
-          btn.disabled = true;
-        }
-        btn.onclick = () => {
-          if (!canAnswer) return;
-          // Désélectionner les autres boutons
-          document.querySelectorAll(".answer-btn").forEach(b => {
-            b.disabled = false;
-            delete b.dataset.selected;
-          });
-          btn.disabled = true;
-          btn.dataset.selected = "true";
-          submitAnswerBtn.disabled = false;
-        };
-        answersContainer.appendChild(btn);
-      });
-
-      submitAnswerBtn.disabled = userAnswers[currentQuestionIndex] !== null;
-    }
-
-    submitAnswerBtn.addEventListener("click", () => {
-      if (!canAnswer) return;
-      const selectedBtn = [...document.querySelectorAll(".answer-btn")].find(b => b.dataset.selected === "true");
-      if (!selectedBtn) return;
-
-      const answerIndex = Number(selectedBtn.dataset.index);
-      // Envoyer la réponse au serveur
-      socket.emit("submitAnswer", { qIndex: currentQuestionIndex, answerIndex });
-      userAnswers[currentQuestionIndex] = answerIndex;
-
-      quizNotification.textContent = "Réponse envoyée !";
-      submitAnswerBtn.disabled = true;
-      canAnswer = false;
-
-      // Stop timer
-      clearTimeout(questionTimer);
-
-      // Passer à la question suivante ou lancer correction si fin
-      if (currentQuestionIndex < quizQuestions.length - 1) {
-        currentQuestionIndex++;
-        showQuestion();
-        startQuestionTimer();
-      } else {
-        // Fin des questions, prévenir serveur de démarrer la correction
-        socket.emit("startCorrection");
-        mainQuiz.style.display = "none";
-        quizNotification.textContent = "Toutes les questions ont été répondues, en attente de la correction...";
-      }
-    });
-
-    function startQuestionTimer() {
-      clearTimeout(questionTimer);
-
-      const timerDisplay = document.getElementById("question-timer");
-      let secondsLeft = 15;
-      timerDisplay.textContent = `Temps restant : ${secondsLeft} secondes`;
-
-      const interval = setInterval(() => {
-        secondsLeft--;
-        if (secondsLeft <= 0) {
-          clearInterval(interval);
-        } else {
-          timerDisplay.textContent = `Temps restant : ${secondsLeft} secondes`;
-        }
-      }, 1000);
-
-      questionTimer = setTimeout(() => {
-        clearInterval(interval);
-        canAnswer = false;
-        submitAnswerBtn.disabled = true;
-        quizNotification.textContent = "Temps écoulé pour cette question.";
-        timerDisplay.textContent = "Temps écoulé.";
-
-        if (currentQuestionIndex < quizQuestions.length - 1) {
-          currentQuestionIndex++;
-          showQuestion();
-          startQuestionTimer();
-        } else {
-          socket.emit("startCorrection");
-          mainQuiz.style.display = "none";
-          quizNotification.textContent = "Temps écoulé, en attente de la correction...";
-        }
-      }, 15000);
-    }
-
-
-    // === Correction (admin) ===
-
-    socket.on("startCorrection", ({ questionIndex, question, userAnswers: allUserAnswers }) => {
-      if (userRole !== "admin") return; // Seulement admin
-
-      correctionPanel.style.display = "block";
-      mainQuiz.style.display = "none";
-      quizNotification.textContent = "";
-      quizScores.textContent = "";
-
-      showCorrectionQuestion(questionIndex, question, allUserAnswers);
-    });
-
-    socket.on("updateCorrection", ({ questionIndex, question, userAnswers: allUserAnswers }) => {
-      if (userRole !== "admin") return;
-      showCorrectionQuestion(questionIndex, question, allUserAnswers);
-    });
-
-    let correctionCurrentIndex = 0;
-    let correctionAllUserAnswers = [];
-    let correctionQuestions = [];
-
-    function showCorrectionQuestion(qIndex, question, allUserAnswers) {
-      correctionCurrentIndex = qIndex;
-      correctionQuestions = quizQuestions;
-      correctionAllUserAnswers = allUserAnswers;
-
-      correctionQuestion.textContent = `Question ${qIndex + 1} : ${question.text}`;
-
-      correctionUserAnswers.innerHTML = "";
-      allUserAnswers.forEach(ua => {
-        const div = document.createElement("div");
-        div.textContent = `${ua.username} a répondu : ${ua.answer !== null ? question.answers[ua.answer] : "(pas de réponse)"}`;
-        correctionUserAnswers.appendChild(div);
-      });
-
-      prevCorrectionBtn.disabled = qIndex === 0;
-      nextCorrectionBtn.disabled = qIndex === quizQuestions.length - 1;
-
-      correctionStatus.textContent = "";
-    }
-
-    prevCorrectionBtn.addEventListener("click", () => {
-      if (correctionCurrentIndex > 0) {
-        correctionCurrentIndex--;
-        socket.emit("requestCorrectionQuestion", correctionCurrentIndex);
-      }
-    });
-
-    nextCorrectionBtn.addEventListener("click", () => {
-      if (correctionCurrentIndex < quizQuestions.length - 1) {
-        correctionCurrentIndex++;
-        socket.emit("requestCorrectionQuestion", correctionCurrentIndex);
-      }
-    });
-
-    validateCorrectionBtn.addEventListener("click", () => {
-      socket.emit("validateCorrectionQuestion", correctionCurrentIndex);
-      correctionStatus.textContent = "Question validée.";
-    });
-
-    // Score update (client)
-    socket.on("updateScores", (scores) => {
-      if (!scores) {
-        quizScores.textContent = "";
-        return;
-      }
-      const sortedScores = Object.entries(scores).sort((a,b) => b[1] - a[1]);
-      let scoreText = "Scores actuels :\n";
-      sortedScores.forEach(([user, score]) => {
-        scoreText += `${user} : ${score}\n`;
-      });
-      quizScores.textContent = scoreText;
-    });
-
-
-    // Dès que le serveur demande le mot de passe
-    socket.on("requestPassword", () => {
-      passwordPrompt.style.display = "block";
-      container.style.display = "none";
-      chatBox.style.display = "none";
-      userListContainer.style.display = "none";
-      form.style.display = "none";
-      startQuizBtn.style.display = "none";
-      closeRoomBtn.style.display = "none";
-      mainQuiz.style.display = "none";
-      correctionPanel.style.display = "none";
-      document.getElementById('lobby').style.display = "block";
-    });
-
-    // On garde les variables correctionCurrentIndex, correctionAllUserAnswers, correctionQuestions
-
-validateCorrectionBtn.addEventListener("click", () => {
-  // Ici, on envoie la validation au serveur
-  socket.emit("validateCorrectionAnswer", { 
-    questionIndex: correctionCurrentIndex 
-  });
-  correctionStatus.textContent = "Réponse validée, en attente...";
-  correctionStatus.style.color = "black"; // neutre en attente
+  renderQuestion();
+  launchTimer();
 });
 
-// On reçoit la validation d'une réponse corrigée, avec info si bonne ou mauvaise
-socket.on("answerCorrectionResult", ({ 
-  questionIndex, 
-  answerIndex, 
-  correct, 
-  lastAnswerToCorrect, 
-  finalScores 
-}) => {
-  // Afficher la couleur en fonction du correct ou pas
-  correctionStatus.textContent = correct ? "Réponse correcte." : "Réponse incorrecte.";
-  correctionStatus.style.color = correct ? "green" : "red";
+function renderQuestion() {
+  const question = quizQuestions[currentQuestionIndex];
+  if (!question) return;
 
-  if (lastAnswerToCorrect) {
-    // On affiche le classement final
-    mainQuiz.style.display = "none";
-    correctionPanel.style.display = "none";
-    quizNotification.style.color = "black";
-    quizNotification.textContent = "Fin du quiz, classement final :";
+  canAnswer = true;
+  quizInfo.textContent = `Question ${currentQuestionIndex + 1} / ${quizQuestions.length}`;
+  
+  // Nettoyer le container
+  questionContainer.innerHTML = "";
 
-    // Formatage des scores dans quizScores
-    let classement = "Classement final :\n";
-    const sortedScores = Object.entries(finalScores).sort((a,b) => b[1] - a[1]);
-    sortedScores.forEach(([user, score], rank) => {
-      classement += `${rank + 1}. ${user} : ${score} points\n`;
-    });
-    quizScores.textContent = classement;
+  // Ajouter le texte de la question
+  const questionTextElem = document.createElement("p");
+  questionTextElem.textContent = question.text;
+  questionContainer.appendChild(questionTextElem);
 
-    // On peut aussi masquer le timer/question
-    document.getElementById("question-timer").textContent = "";
-    questionContainer.textContent = "";
-    answersContainer.innerHTML = "";
-    submitAnswerBtn.style.display = "none";
+  // Afficher média si existant
+if (Array.isArray(question.media) && question.media.length > 0) {
+  question.media.forEach(m => {
+    let mediaElem;
+    if (m.type === "image") {
+      mediaElem = document.createElement("img");
+      mediaElem.src = m.url;
+      mediaElem.alt = "Image liée à la question";
+      mediaElem.style.maxWidth = "100%";
+      mediaElem.style.marginTop = "10px";
+    } else if (m.type === "audio") {
+      mediaElem = document.createElement("audio");
+      mediaElem.src = m.url;
+      mediaElem.controls = true;
+      mediaElem.style.display = "block";
+      mediaElem.style.marginTop = "10px";
+    } else if (m.type === "video") {
+      mediaElem = document.createElement("video");
+      mediaElem.src = m.url;
+      mediaElem.controls = true;
+      mediaElem.style.display = "block";
+      mediaElem.style.maxWidth = "100%";
+      mediaElem.style.marginTop = "10px";
+    }
 
+    if (mediaElem) {
+      questionContainer.appendChild(mediaElem);
+    }
+  });
+}
+
+
+  quizNotification.textContent = "";
+
+  answersContainer.innerHTML = "";
+  question.answers.forEach((answer, idx) => {
+    const btn = document.createElement("button");
+    btn.className = "answer-btn";
+    btn.textContent = answer;
+    btn.dataset.index = idx;
+    btn.disabled = false;
+
+    if (userAnswers[currentQuestionIndex] !== null) {
+      btn.disabled = true;
+      if (userAnswers[currentQuestionIndex] === idx) {
+        btn.style.backgroundColor = "#ccc";
+      }
+    }
+
+    btn.onclick = () => {
+      if (!canAnswer) return;
+
+      document.querySelectorAll(".answer-btn").forEach(b => {
+        b.disabled = false;
+        b.removeAttribute("data-selected");
+        b.style.backgroundColor = "";
+      });
+
+      btn.dataset.selected = "true";
+      btn.disabled = true;
+      btn.style.backgroundColor = "#ddd";
+      submitAnswerBtn.disabled = false;
+    };
+
+    answersContainer.appendChild(btn);
+  });
+
+  submitAnswerBtn.disabled = userAnswers[currentQuestionIndex] !== null;
+}
+
+
+submitAnswerBtn.addEventListener("click", () => {
+  if (!canAnswer) return;
+
+  const selected = document.querySelector(".answer-btn[data-selected='true']");
+  if (!selected) return;
+
+  const index = Number(selected.dataset.index);
+  socket.emit("submitAnswer", { qIndex: currentQuestionIndex, answerIndex: index });
+
+  userAnswers[currentQuestionIndex] = index;
+  submitAnswerBtn.disabled = true;
+  canAnswer = false;
+  clearTimeout(questionTimer);
+  quizNotification.textContent = "Réponse enregistrée.";
+
+  if (currentQuestionIndex < quizQuestions.length - 1) {
+    currentQuestionIndex++;
+    renderQuestion();
+    launchTimer();
   } else {
-    // Pas la dernière réponse, on peut continuer la correction normalement
-    correctionStatus.textContent += " Continuez la correction.";
+    socket.emit("startCorrection");
+    mainQuiz.style.display = "none";
+    quizNotification.textContent = "Quiz terminé. En attente de la correction...";
   }
 });
+
+
+function launchTimer() {
+  clearTimeout(questionTimer);
+  clearInterval(questionInterval); // nettoyer l'ancien interval
+
+  const timerDisplay = document.getElementById("question-timer");
+  let remaining = 15;
+  timerDisplay.textContent = `Temps restant : ${remaining} s`;
+
+  questionInterval = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      clearInterval(questionInterval);
+    } else {
+      timerDisplay.textContent = `Temps restant : ${remaining} s`;
+    }
+  }, 1000);
+
+  questionTimer = setTimeout(() => {
+    clearInterval(questionInterval);
+    canAnswer = false;
+    submitAnswerBtn.disabled = true;
+    quizNotification.textContent = "Temps écoulé pour cette question.";
+    timerDisplay.textContent = "Temps écoulé.";
+
+    if (currentQuestionIndex < quizQuestions.length - 1) {
+      currentQuestionIndex++;
+      renderQuestion();
+      launchTimer();
+    } else {
+      socket.emit("startCorrection");
+      mainQuiz.style.display = "none";
+      quizNotification.textContent = "Temps écoulé. En attente de la correction...";
+    }
+  }, 15000);
+}
+
+
+// === CORRECTION LOGIC ===
+
+let allUserAnswers = {};
+let currentCorrectionIndex = 0;
+
+socket.on("startCorrection", (data) => {
+  if (userRole !== "admin") return;
+
+  mainQuiz.style.display = "none";
+  correctionPanel.style.display = "block";
+  correctionStatus.textContent = "";
+  correctionQuestion.textContent = "";
+  correctionUserAnswers.innerHTML = "";
+
+  currentCorrectionIndex = 0;
+  quizQuestions = data.questions;
+  allUserAnswers = data.userAnswers;
+
+  renderCorrectionQuestion();
+});
+
+function renderCorrectionQuestion() {
+  const q = quizQuestions[currentCorrectionIndex];
+  correctionQuestion.textContent = `Q${currentCorrectionIndex + 1}: ${q.text}`;
+  correctionUserAnswers.innerHTML = "";
+
+  for (const [username, answers] of Object.entries(allUserAnswers)) {
+    const answerIndex = answers[currentCorrectionIndex];
+    const userDiv = document.createElement("div");
+    userDiv.style.marginBottom = "10px";
+
+    const answerText = typeof answerIndex === "number" ? q.answers[answerIndex] : "Pas de réponse";
+
+    userDiv.innerHTML = `<strong>${username} :</strong> ${answerText}`;
+    correctionUserAnswers.appendChild(userDiv);
+  }
+
+  prevCorrectionBtn.disabled = currentCorrectionIndex === 0;
+  nextCorrectionBtn.disabled = currentCorrectionIndex === quizQuestions.length - 1;
+}
+
+prevCorrectionBtn.addEventListener("click", () => {
+  if (currentCorrectionIndex > 0) {
+    currentCorrectionIndex--;
+    renderCorrectionQuestion();
+  }
+});
+
+nextCorrectionBtn.addEventListener("click", () => {
+  if (currentCorrectionIndex < quizQuestions.length - 1) {
+    currentCorrectionIndex++;
+    renderCorrectionQuestion();
+  }
+});
+
+// validateCorrectionBtn.addEventListener("click", () => {
+//   correctionStatus.textContent = `Question ${currentCorrectionIndex + 1} validée.`;
+  
+//   // Envoi de la validation au serveur
+//   socket.emit("validateCorrectionAnswer", { questionIndex: currentCorrectionIndex });
+  
+//   // Nettoyer le message après 2s
+//   setTimeout(() => correctionStatus.textContent = "", 2000);
+// });
+
+
+socket.on("quizRanking", (ranking) => {
+  // Masquer les autres panneaux
+  mainQuiz.style.display = "none";
+  correctionPanel.style.display = "none";
+
+  const rankingDiv = document.getElementById("final-ranking");
+  const tbody = document.querySelector("#ranking-table tbody");
+
+  tbody.innerHTML = ""; // Vider le tableau
+
+  ranking.forEach(({ rank, user, score }) => {
+    const tr = document.createElement("tr");
+
+    const tdRank = document.createElement("td");
+    tdRank.textContent = rank;
+    tdRank.style.padding = "5px";
+    tdRank.style.textAlign = "center";
+
+    const tdUser = document.createElement("td");
+    tdUser.textContent = user;
+    tdUser.style.padding = "5px";
+
+    const tdScore = document.createElement("td");
+    tdScore.textContent = score;
+    tdScore.style.padding = "5px";
+    tdScore.style.textAlign = "center";
+
+    tr.appendChild(tdRank);
+    tr.appendChild(tdUser);
+    tr.appendChild(tdScore);
+
+    tbody.appendChild(tr);
+  });
+
+  rankingDiv.style.display = "block";
+  quizNotification.textContent = "Correction terminée. Voici le classement final.";
+});
+
 
   </script>
 </body>

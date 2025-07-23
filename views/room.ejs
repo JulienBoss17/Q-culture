@@ -4,10 +4,8 @@
   <meta charset="UTF-8" />
   <title>Room - <%= roomName %></title>
   <script src="/socket.io/socket.io.js"></script>
+  <link rel="stylesheet" href="/style.css" />
 </head>
-<style>
-  
-</style>
 <body>
   <%- include('partials/navbar') %>
 
@@ -411,6 +409,12 @@ function launchTimer() {
     quizNotification.textContent = "Temps écoulé pour cette question.";
     timerDisplay.textContent = "Temps écoulé.";
 
+    // Envoie de "non-réponse"
+    if (userAnswers[currentQuestionIndex] === null) {
+      userAnswers[currentQuestionIndex] = null;
+      socket.emit("submitAnswer", { qIndex: currentQuestionIndex, answerIndex: null });
+    }
+
     if (currentQuestionIndex < quizQuestions.length - 1) {
       currentQuestionIndex++;
       renderQuestion();
@@ -422,6 +426,7 @@ function launchTimer() {
     }
   }, 15000);
 }
+
 
 
 // === CORRECTION LOGIC ===

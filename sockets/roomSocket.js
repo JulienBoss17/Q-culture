@@ -23,7 +23,6 @@ async function handleRoomSockets(socket, io, username, role) {
     const safeUsername = username || 'Invité';
     socket.data.username = safeUsername;
     socket.data.role = role;
-    console.log(`[handleRoomSockets] ${safeUsername} connecté avec le rôle ${role}`);
 
     // --- JOIN ROOM ---
     socket.on('joinRoom', async ({ room, password }) => {
@@ -96,7 +95,6 @@ async function handleRoomSockets(socket, io, username, role) {
       delete roomAdmins[room];
       delete quizzesByRoom[room];
 
-      console.log(`[closeRoom] Room "${room}" fermée par ${safeUsername}`);
     });
 
     // --- DÉCONNEXION ---
@@ -114,7 +112,6 @@ async function handleRoomSockets(socket, io, username, role) {
         delete roomPasswords[room];
         delete roomAdmins[room];
         delete quizzesByRoom[room];
-        console.log(`[disconnect] Suppression de la room vide "${room}"`);
       }
 
       delete avatarsByUser[safeUsername];
@@ -126,7 +123,6 @@ async function handleRoomSockets(socket, io, username, role) {
 socket.on('startQuiz', async () => {
   const room = socket.data.room;
   const username = socket.data.username;
-  console.log(`[startQuiz] Reçu de ${username} dans room ${room}`);
 
   if (roomAdmins[room] !== username) {
     return socket.emit('errorMessage', 'Seul l’admin peut démarrer le quiz.');
@@ -137,8 +133,6 @@ socket.on('startQuiz', async () => {
     return socket.emit('errorMessage', 'Aucune question disponible dans la base de données.');
   }
 
-  console.log(`[startQuiz] ${questions.length} questions récupérées`);
-  console.log(`[startQuiz] Exemple de question:`, questions[0]);
 
   quizzesByRoom[room] = {
     questions,
@@ -150,7 +144,6 @@ socket.on('startQuiz', async () => {
     validatedAnswers: {}  // { questionIndex: [0, 2], ... }
   };
 
-  console.log(`[startQuiz] Quiz initialisé pour room ${room}`);
 
   io.to(room).emit('quizReady', { questionsCount: questions.length });
   io.to(room).emit('startQuiz', questions);
@@ -162,7 +155,8 @@ socket.on('submitAnswer', ({ qIndex, answerIndex }) => {
   const room = socket.data.room;
   const username = socket.data.username;
   if (!room || !quizzesByRoom[room]) return;
-  if (!Number.isInteger(qIndex) || !Number.isInteger(answerIndex)) return;
+  if (!Number.isInteger(qIndex) || (answerIndex !== null && !Number.isInteger(answerIndex))) return;
+
 
   const quiz = quizzesByRoom[room];
   if (!quiz.answers[username]) quiz.answers[username] = [];
@@ -170,7 +164,6 @@ socket.on('submitAnswer', ({ qIndex, answerIndex }) => {
   if (quiz.answers[username][qIndex] !== undefined) return;
 
   quiz.answers[username][qIndex] = answerIndex;
-  console.log(`[submitAnswer] ${username} dans ${room} a répondu ${answerIndex} à Q${qIndex}`);
 
   // Marquer la question corrigée automatiquement si correction auto
   quiz.correctionResults[qIndex] = true;
@@ -194,9 +187,6 @@ socket.on("startCorrection", () => {
   quiz.correctionStarted = true;
   quiz.currentCorrectionIndex = 0;
   quiz.correctionResults = new Array(quiz.questions.length).fill(false);
-
-  console.log(`[startCorrection] Lancement demandé par ${username}`);
-  console.log(`[startCorrection] Correction lancée pour room ${room}`);
 
   io.to(room).emit("startCorrection", {
     questions: quiz.questions,
@@ -244,18 +234,14 @@ socket.on('endCorrection', () => {
 
   const questions = quiz.questions;
 
-  console.log(`[endCorrection] Calcul scores finaux pour la room: ${room}`);
 
   Object.entries(quiz.answers).forEach(([user, answers]) => {
     let score = 0;
-    console.log(`[endCorrection] Scores pour user: ${user}`);
     answers.forEach((a, i) => {
       const correctAnswer = questions[i]?.correctAnswerIndex;
-      console.log(`User ${user} - Q${i} => donné: ${a}, attendu: ${correctAnswer}`);
       if (a !== undefined && a === correctAnswer) score++;
     });
     quiz.scores[user] = score;
-    console.log(`[endCorrection] Score final ${user}: ${score}`);
   });
 
   const ranking = Object.entries(quiz.scores)

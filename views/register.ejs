@@ -2,41 +2,37 @@
 <html>
 <head>
   <title>Inscription</title>
-  <style>
-    .avatar-option {
-      display: inline-block;
-      margin: 10px;
-      text-align: center;
-    }
-    .avatar-option img {
-      border: 2px solid transparent;
-      border-radius: 50%;
-      width: 80px;
-      height: 80px;
-      cursor: pointer;
-    }
-    .avatar-option input[type="radio"]:checked + img {
-      border-color: blue;
-    }
-  </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="./stylelogs.css">
 </head>
-<body>
+<body class="register-page">
   <%- include('partials/navbar') %>
+
+    <div class="decorations">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/b/be/Gamepad.svg" alt="manette" class="decor-icon icon-gamepad" />
+      <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/Trophy.svg" alt="trophée" class="decor-icon icon-trophy" />
+      <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Globe.svg" alt="globe" class="decor-icon icon-globe" />
+    </div>
+
   <h1>Créer un compte</h1>
 
-  <% if (error) { %>
-    <p style="color: red;"><%= error %></p>
-  <% } %>
+<% if (error) { %>
+  <p class="error-message"><%= error %></p>
+<% } %>
+
 
   <form method="POST" action="/register">
     <label for="username">Nom d’utilisateur :</label>
-    <input type="text" name="username" required><br>
+    <input type="text" name="username" required>
 
     <label for="password">Mot de passe :</label>
-    <input type="password" name="password" required><br>
+    <input type="password" name="password" required>
 
-    <label>Choisis un avatar :</label><br>
-    <div>
+    <label>Choisis un avatar :</label>
+    <div class="avatar-selection">
       <label class="avatar-option">
         <input type="radio" name="avatar" value="avatars/avatar1.svg" required hidden>
         <img src="/avatars/avatar1.svg" alt="Avatar 1" onclick="selectAvatar(this)">
@@ -50,17 +46,18 @@
         <img src="/avatars/avatar3.svg" alt="Avatar 3" onclick="selectAvatar(this)">
       </label>
     </div>
-
     <button type="submit">S’inscrire</button>
   </form>
 
   <p>Déjà inscrit ? <a href="/login">Se connecter</a></p>
 
+  <canvas id="backgroundCanvas"></canvas>
   <script>
     function selectAvatar(img) {
       document.querySelectorAll('input[name="avatar"]').forEach(input => input.checked = false);
       img.previousElementSibling.checked = true;
     }
   </script>
+  <script src="./scripthome.js"></script>
 </body>
 </html>

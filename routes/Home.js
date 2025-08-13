@@ -69,8 +69,7 @@ router.post("/login", async (req, res) => {
         const user = await User.findOne({ nom: req.body.nom });
 
         if (!user || !(await bcrypt.compare(req.body.password, user.password))) {
-            req.flash("error2", "Utilisateur ou mot de passe incorrect.");
-            return res.redirect('/compte');
+            return res.redirect('/login');
         }
 
         user.status = 'Connecté'; 

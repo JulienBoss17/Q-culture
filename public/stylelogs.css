@@ -1,0 +1,195 @@
+/* ===================== */
+/*        Variables      */
+/* ===================== */
+:root {
+  --primary-gradient: linear-gradient(180deg, #9333ea, #1c1a39);
+  --primary-color: #4f46e5;
+  --secondary-color: #9333ea;
+  --bg-light: #eef2ff;
+  --bg-white: #fff;
+  --bg-card: #1e293b;
+  --text-light: #f1f5f9;
+  --text-muted: #94a3b8;
+  --accent-color: #fbbf24;
+  --radius: 12px;
+  --shadow-light: 0 4px 12px rgba(79, 70, 229, 0.2);
+  --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.07);
+  --font-family: "Inter", sans-serif;
+}
+
+/* ===================== */
+/*   Reset & base style  */
+/* ===================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  font-weight: 500;
+  font-style: normal;
+  font-optical-sizing: auto;
+}
+
+body {
+  background: var(--primary-gradient);
+  color: var(--text-light);
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+/* ===================== */
+/*   Layout des pages    */
+/* ===================== */
+.register-page,
+.login-page {
+  background-color: #F9FAFB;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  padding: 60px 20px;
+  color: #1F2937;
+}
+
+/* ===================== */
+/*      Titres h1        */
+/* ===================== */
+.register-page h1,
+.login-page h1 {
+  margin-top: 6%;
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 30px;
+  color: var(--text-light);
+}
+
+/* ===================== */
+/*      Formulaires      */
+/* ===================== */
+.register-page form,
+.login-page form {
+  background-color: var(--bg-card);
+  padding: 30px 40px;
+  border-radius: 16px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+  width: 380px;
+  max-width: 95%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.register-page form label,
+.login-page form label {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 6px;
+  color: var(--text-light);
+}
+
+.register-page input[type="text"],
+.register-page input[type="password"],
+.login-page input[type="text"],
+.login-page input[type="password"] {
+  padding: 12px 15px;
+  font-size: 1rem;
+  border: 1.5px solid #D1D5DB;
+  border-radius: 10px;
+  transition: border-color 0.3s ease;
+}
+
+.register-page input:focus,
+.login-page input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 6px rgba(79, 70, 229, 0.5);
+}
+
+.register-page button[type="submit"],
+.login-page button[type="submit"] {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 12px 0;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.register-page button[type="submit"]:hover,
+.login-page button[type="submit"]:hover {
+  background-color: #3730A3;
+}
+
+/* ===================== */
+/*     Message erreur    */
+/* ===================== */
+.register-page .error-message,
+.login-page .error-message {
+  color: #DC2626;
+  background-color: var(--bg-light);
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* ===================== */
+/*        Liens          */
+/* ===================== */
+.register-page > p,
+.login-page > p {
+  margin-top: 25px;
+  font-size: 1rem;
+  color: #6B7280;
+  text-align: center;
+}
+
+.register-page > p a,
+.login-page > p a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.register-page > p a:hover,
+.login-page > p a:hover {
+  color: #3730A3;
+  text-decoration: underline;
+}
+
+/* ===================== */
+/*  Avatar (inscription) */
+/* ===================== */
+.avatar-selection {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 5px;
+}
+
+.avatar-option img {
+  border: 2px solid transparent;
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.avatar-option img:hover {
+  transform: scale(1.05);
+}
+
+.avatar-option input[type="radio"]:checked + img {
+  border-color: var(--primary-color);
+}

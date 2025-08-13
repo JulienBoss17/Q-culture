@@ -1,41 +1,15 @@
-<style>
-nav {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  height: 50px;
-  background: #f0f0f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 20px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  z-index: 1100;
-}
-body {
-  padding-top: 50px;
-}
-a {
-  margin-left: 15px;
-  text-decoration: none;
-  color: #000000;
-  font-weight: 600;
-}
-
-a:hover {
-  color: #808080;
-}
-</style>
-
 <nav>
-  <div>
-    <a href="/">Accueil</a>
+  <div class="nav-left">
+    <a href="/" class="logo">Q-Culture</a>
   </div>
-  <div>
-    <h3>
-      Q-Culture
-    </h3>
-  </div>
-  <div>
+
+  <button class="burger" aria-label="Toggle menu" aria-expanded="false">
+    <span class="burger-line"></span>
+    <span class="burger-line"></span>
+    <span class="burger-line"></span>
+  </button>
+
+  <div class="nav-right">
     <% if (user) { %>
       <a href="/me">Profil</a>
       <a href="/logout">Déconnexion</a>
@@ -45,3 +19,150 @@ a:hover {
     <% } %>
   </div>
 </nav>
+
+<style>
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 30px;
+    z-index: 1100;
+  }
+
+  .nav-left .logo {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.5rem;
+    text-decoration: none;
+  }
+
+  nav a {
+    margin: 0 12px;
+    text-decoration: none;
+    color: #FFFFFF;
+    font-weight: 600;
+    transition: color 0.2s ease;
+  }
+
+  nav a:hover {
+    color: #E0E7FF;
+    text-decoration: underline;
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+  }
+
+  /* Burger button */
+  .burger {
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 28px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1200;
+  }
+
+  .burger:focus {
+    outline: 2px solid #E0E7FF;
+  }
+
+  .burger-line {
+    width: 100%;
+    height: 3px;
+    background-color: #fff;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+  }
+
+  /* Animation burger open */
+  .burger.open .burger-line:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+  .burger.open .burger-line:nth-child(2) {
+    opacity: 0;
+  }
+  .burger.open .burger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(6px, -6px);
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    nav {
+      height: 60px;
+      padding: 0 20px;
+            background: linear-gradient(180deg, #9333ea, #1c1a39);
+    }
+
+    .burger {
+      display: flex;
+    }
+
+    .nav-right {
+      position: fixed;
+      top: 60px;
+      right: 0;
+      height: calc(100vh - 60px);
+      width: 200px;
+      height: auto;
+      flex-direction: column;
+      padding: 20px 0;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.3);
+      overflow-y: auto;
+      background-color: #1c1a39;
+      border-radius: 0% 0 0 10px;
+    }
+
+    .nav-right.open {
+      transform: translateX(0);
+    }
+
+    .nav-right a {
+      margin: 12px 0;
+      padding: 0 20px;
+      font-size: 1.1rem;
+    }
+  }
+</style>
+
+<script>
+  const burger = document.querySelector('.burger');
+  const navRight = document.querySelector('.nav-right');
+
+  burger.addEventListener('click', () => {
+    const expanded = burger.getAttribute('aria-expanded') === 'true' || false;
+    burger.setAttribute('aria-expanded', !expanded);
+    burger.classList.toggle('open');
+    navRight.classList.toggle('open');
+  });
+
+  // Fermer menu au clic sur un lien (optionnel)
+  navRight.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        burger.classList.remove('open');
+        burger.setAttribute('aria-expanded', false);
+        navRight.classList.remove('open');
+      }
+    });
+  });
+
+  // Fermer menu si fenêtre redimensionnée à plus de 768px
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 768) {
+      burger.classList.remove('open');
+      burger.setAttribute('aria-expanded', false);
+      navRight.classList.remove('open');
+    }
+  });
+</script>

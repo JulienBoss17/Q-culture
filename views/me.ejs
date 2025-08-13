@@ -2,16 +2,31 @@
 <html>
 <head>
   <title>Mon profil</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./styleme.css">
 </head>
 <body>
   <%- include('partials/navbar') %>
-  <h1>Mon espace</h1>
-  <h3><%= user.role %></h3>
-  <p>Connecté en tant que : <strong><%= user.username %></strong></p>
 
-  <!-- Affichage de l'avatar -->
-  <div>
-    <img src="/<%= user.avatar %>" alt="Avatar de <%= user.username %>" width="100" height="100" style="border-radius: 50%;">
+    <div class="decorations">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/b/be/Gamepad.svg" alt="manette" class="decor-icon icon-gamepad" />
+      <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/Trophy.svg" alt="trophée" class="decor-icon icon-trophy" />
+      <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Globe.svg" alt="globe" class="decor-icon icon-globe" />
+    </div>
+
+  <div class="profile-container">
+    <img class="avatar" src="/<%= user.avatar %>" alt="Avatar de <%= user.username %>" />
+    <h3>Vous êtes <%= user.role %></h3>
+    <p>Connecté en tant que : <strong><%= user.username %></strong></p>
+    <a href="/logout" class="logout-button">Se déconnecter</a>
   </div>
+
+    <canvas id="backgroundCanvas"></canvas>
+
+    <script src="./scripthome.js"></script>
+    <script src="./scriptme.js"></script>
 </body>
 </html>

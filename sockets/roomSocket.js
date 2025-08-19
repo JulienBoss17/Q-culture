@@ -84,7 +84,7 @@ async function handleSendMessage(socket, io, { room, message }) {
     createdAt: new Date()
   });
   await msg.save();
-  io.to(room).emit('chatMessage', { user: username, message });
+  io.to(room).emit('chatMessage', { user: username, message, createdAt: msg.createdAt });
 }
 
 function handleTyping(socket, io, room) {

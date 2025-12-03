@@ -34,7 +34,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding-top: 150px;
+      padding-top: 75px;
     }
 
     /* Navbar partial assumed styled separately */
@@ -211,20 +211,14 @@
 /* ===========================
    QUESTION
 =========================== */
-#question-container {
-  flex: 1;
-  font-size: 1.1rem;
-  color: #111827;
-  user-select: text;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-}
+/* Images & vidéos */
+/* ===========================
+   MÉDIAS DANS LE QUESTION CONTAINER
+=========================== */
 
-/* Médias */
+/* Images & vidéos */
 #question-container img,
-#question-container video,
-#question-container audio {
+#question-container video {
   width: 100%;
   max-width: 100%;
   height: 220px;
@@ -238,6 +232,53 @@
 #question-container img {
   object-fit: contain; /* garde proportions */
 }
+
+/* Audio centré verticalement dans 220px */
+#question-container audio {
+  width: 100%;
+  max-width: 100%;
+  height: 50px;                /* taille du player */
+  border-radius: 12px;
+  background: var(--bg-card);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+  outline: none;
+  cursor: pointer;
+
+  /* Fix pour centrer verticalement dans 220px */
+  display: flex;
+  align-items: center;       /* centre verticalement */
+  justify-content: center;   /* centre horizontalement */
+  margin: 15px 0 20px 0;
+  min-height: 220px;         /* force la boîte à 220px */
+  box-sizing: border-box;
+}
+
+/* Apparence moderne des contrôles audio (Chrome / Safari) */
+#question-container audio::-webkit-media-controls-panel {
+  background-color: var(--bg-card);
+  border-radius: 12px;
+}
+
+#question-container audio::-webkit-media-controls-play-button,
+#question-container audio::-webkit-media-controls-volume-slider {
+  background-color: var(--primary-color);
+  border-radius: 50%;
+}
+
+#question-container audio::-webkit-media-controls-timeline {
+  height: 6px;
+  border-radius: 3px;
+  background-color: var(--bg-card);
+}
+
+/* Firefox */
+#question-container audio::-moz-media-controls-panel {
+  background-color: var(--bg-card);
+  border-radius: 12px;
+}
+
+
+
 
 /* ===========================
    RÉPONSES
@@ -389,6 +430,38 @@
   font-weight: 600;
   font-size: 1rem;
   color: #374151;
+}
+
+
+/* ===========================
+   MEDIA FIXE DANS LE QUESTION CONTAINER
+=========================== */
+/* ===========================
+   MEDIA FIXE DANS LE QUESTION CONTAINER
+=========================== */
+#question-container {
+  flex: 1;
+  font-size: 1.1rem;
+  color: #111827;
+  user-select: text;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* Conteneur interne fixe pour le média */
+#question-container > img,
+#question-container > video,
+#question-container > audio {
+  flex-shrink: 0;          /* ne réduit jamais la taille */
+  width: 100%;
+  max-width: 100%;
+  height: 220px;           /* hauteur fixe pour tout média */
+  margin: 15px 0 20px 0;
+  border-radius: 10px;
+  display: flex;            /* permet centrer le contenu verticalement */
+  justify-content: center;  /* centre horizontalement (utile pour audio) */
+  align-items: center;      /* centre verticalement */
 }
 
 

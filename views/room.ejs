@@ -20,6 +20,9 @@
       <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Globe.svg" alt="globe" class="decor-icon icon-globe" />
     </div>
 
+    
+  <button id="close-room-btn" style="display:none;">Fermer la room</button>
+
   <div id="lobby">
     <h2>Lobby</h2>
     <div id="waiting-message">En attente du démarrage du quiz par l’admin...</div>
@@ -66,18 +69,16 @@
       </table>
     </div>
 
-  <button id="close-room-btn" style="display:none;">Fermer la room</button>
-
-<div id="right-panel">
-  <div id="user-list" style="display:none;">Chargement des utilisateurs...</div>
-  <div id="chat-box" style="display:none;"></div>
-  <!-- On peut supprimer le div typing-indicator si on n'en veut plus -->
-  <!-- <div id="typing-indicator"></div> -->
-  <form id="chat-form" style="display:none;">
-    <input type="text" id="msg" placeholder="Écris un message..." autocomplete="off" />
-    <button type="submit">Envoyer</button>
-  </form>
-</div>
+    <div id="right-panel">
+      <div id="user-list" style="display:none;">Chargement des utilisateurs...</div>
+      <div id="chat-box" style="display:none;"></div>
+      <!-- On peut supprimer le div typing-indicator si on n'en veut plus -->
+      <!-- <div id="typing-indicator"></div> -->
+      <form id="chat-form" style="display:none;">
+        <input type="text" id="msg" placeholder="Écris un message..." autocomplete="off" />
+        <button type="submit">Envoyer</button>
+      </form>
+    </div>
 
   </div>
 

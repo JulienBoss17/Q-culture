@@ -30,9 +30,9 @@ app.use(sessionMiddleware);
 
 // Routes
 const homeRouter = require("./routes/Home");
-app.use(homeRouter);
 const roomRouter = require("./routes/Room");
-app.use(roomRouter);
+app.use("/site3", homeRouter);
+app.use("/site3", roomRouter);
 
 // Intégration de la session dans Socket.io
 const wrap = middleware => (socket, next) => {
@@ -67,6 +67,6 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB connected successfully");
-    server.listen(process.env.PORT, () => console.log(`✅ Server running on port ${process.env.PORT}`));
+    server.listen(process.env.PORT, "127.0.0.1",() => console.log(`✅ Server running on port ${process.env.PORT}`));
   })
   .catch((err) => console.error("MongoDB connection failed:", err));

@@ -7,81 +7,77 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <%- include('partials/navbar') %>
 
-<section class="home">
-  <div class="topbar">
-    <div class="welcome">
-      <h3>Bienvenue sur Q-Culture</h3>
-      <p>Choisissez une room pour commencer à jouer.</p>
-    </div>
-  </div>
-
-  <!-- Section Rooms avec fond dégradé et décorations -->
-  <div class="rooms">
-    <!-- Éléments décoratifs -->
-    <div class="decorations">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/b/be/Gamepad.svg" alt="manette" class="decor-icon icon-gamepad" />
-      <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/Trophy.svg" alt="trophée" class="decor-icon icon-trophy" />
-      <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Globe.svg" alt="globe" class="decor-icon icon-globe" />
+  <section class="home">
+    <div class="topbar">
+      <div class="welcome">
+        <h3>Bienvenue sur Q-Culture</h3>
+        <p>Choisissez une room pour commencer à jouer.</p>
+      </div>
     </div>
 
-    <div class="rooms-container">
-      <div class="room-list">
-        <div class="room-card">
-          <div class="room-image-wrapper">
-            <img src="https://cmsassets.rgpub.io/sanity/images/dsfx7636/news/aeddf86348891bd4bc12509db175d0cccb8b8c02-837x469.jpg?w=1200&h=630&fm=webp&fit=crop&crop=center" alt="League of Legends" />
-            <div class="room-overlay">
-              <h4>League of Legends</h4>
-              <p class="room-description">Un quiz sur l'univers du jeu vidéo compétitif le plus joué !</p>
-            </div>
-          </div>
-          <a href="/room/lol" class="join-button">Rejoindre</a>
-        </div>
+    <div class="rooms">
+      <div class="decorations">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/b/be/Gamepad.svg" alt="manette" class="decor-icon icon-gamepad" />
+        <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/Trophy.svg" alt="trophée" class="decor-icon icon-trophy" />
+        <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Globe.svg" alt="globe" class="decor-icon icon-globe" />
+      </div>
 
-        <div class="room-card">
-          <div class="room-image-wrapper">
-            <img src="https://cdn.futura-sciences.com/sources/images/cerveau-organe.jpg" alt="Culture générale" />
-            <div class="room-overlay">
-              <h4>Culture Générale</h4>
-              <p class="room-description">Testez vos connaissances dans tous les domaines !</p>
+      <div class="rooms-container">
+        <div class="room-list">
+          <div class="room-card">
+            <div class="room-image-wrapper">
+              <img src="https://www.cluses.fr/wp-content/uploads/2025/02/Illustration-du-Systeme-solaire-EXPO.jpg" alt="Astronomie" />
+              <div class="room-overlay">
+                <h4>Astronomie</h4>
+                <p class="room-description">Un quiz sur l'Astronomie</p>
+              </div>
             </div>
+            <a href="/room/lol" class="join-button">Rejoindre</a>
           </div>
-          <a href="/room/culture" class="join-button">Rejoindre</a>
+
+          <div class="room-card">
+            <div class="room-image-wrapper">
+              <img src="https://cdn.futura-sciences.com/sources/images/cerveau-organe.jpg" alt="Culture générale" />
+              <div class="room-overlay">
+                <h4>Culture Générale</h4>
+                <p class="room-description">Testez vos connaissances dans tous les domaines !</p>
+              </div>
+            </div>
+            <a href="/room/culture" class="join-button">Rejoindre</a>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Section Features inchangée -->
-</section>
+  <section class="features">
+    <div class="feature-card">
+      <img src="https://cdn-icons-png.flaticon.com/512/3409/3409454.png" alt="Jouez avec vos amis" />
+      <h4>Jouez avec vos amis</h4>
+      <p>Créez ou rejoignez une room en un clic et affrontez vos proches en temps réel.</p>
+    </div>
 
-<section class="features">
-  <div class="feature-card">
-    <img src="https://cdn-icons-png.flaticon.com/512/3409/3409454.png" alt="Jouez avec vos amis" />
-    <h4>Jouez avec vos amis</h4>
-    <p>Créez ou rejoignez une room en un clic et affrontez vos proches en temps réel.</p>
-  </div>
+    <div class="feature-card">
+      <img src="https://cdn-icons-png.flaticon.com/512/3629/3629625.png" alt="Classements en direct" />
+      <h4>Classements en direct</h4>
+      <p>Suivez votre score et celui de vos adversaires pendant le quiz.</p>
+    </div>
 
-  <div class="feature-card">
-    <img src="https://cdn-icons-png.flaticon.com/512/3629/3629625.png" alt="Classements en direct" />
-    <h4>Classements en direct</h4>
-    <p>Suivez votre score et celui de vos adversaires pendant le quiz.</p>
-  </div>
+    <div class="feature-card">
+      <img src="https://cdn-icons-png.flaticon.com/512/2080/2080878.png" alt="Des milliers de questions" />
+      <h4>Des milliers de questions</h4>
+      <p>Culture générale, pop culture, science, sport… Il y en a pour tous les goûts !</p>
+    </div>
+  </section>
 
-  <div class="feature-card">
-    <img src="https://cdn-icons-png.flaticon.com/512/2080/2080878.png" alt="Des milliers de questions" />
-    <h4>Des milliers de questions</h4>
-    <p>Culture générale, pop culture, science, sport… Il y en a pour tous les goûts !</p>
-  </div>
-</section>
+  <canvas id="backgroundCanvas"></canvas>
 
-<canvas id="backgroundCanvas"></canvas>
-
-<script src="./scripthome.js"></script>
-
+  <!-- Inclure le script home -->
+  <script src="/js/scripthome.js"></script>
 </body>
 </html>

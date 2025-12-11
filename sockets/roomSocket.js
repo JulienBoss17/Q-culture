@@ -1,330 +1,174 @@
+const Message = require('../models/Message');
 const bcrypt = require('bcrypt');
-const MessageModel = require('../models/Message');
-const UserModel = require('../models/User');
-const QuestionModel = require('../models/Question');
+const { usersByRoom, roomPasswords, roomAdmins, avatarsByUser, quizzesByRoom,
+        fetchAvatar, emitUserList, isAdmin, createRoom, cleanupUserFromRoom } = require('../managers/roomManager');
+const { createQuizForRoom, initQuizStorage, storeAnswer, computeFinalScores } = require('../managers/quizManager');
 
-// --- Mémoire partagée ---
-const usersByRoom = new Map();       // roomName => Set des usernames
-const roomPasswords = new Map();     // roomName => hashedPassword
-const roomAdmins = new Map();        // roomName => username admin
-const avatarsByUser = new Map();     // username => avatar string
-const quizzesByRoom = new Map();     // roomName => quiz data
+module.exports = async function handleRoomSockets(socket, io, username, role) {
+  if (!username) return socket.disconnect();
+  let currentRoom = null;
+  let currentQuestionIndex = 0;
+  let questionTimer = null;
 
-function emitUserList(io, room) {
-  const usersSet = usersByRoom.get(room);
-  if (!usersSet) return;
-  const users = Array.from(usersSet).map(username => ({
-    username,
-    avatar: avatarsByUser.get(username) || 'avatar1.svg'
-  }));
-  io.to(room).emit('userList', users);
-}
+  // ==== JOIN ROOM ====
+  socket.on("joinRoom", async ({ room, password }) => {
+    if (!room) return socket.emit("errorMessage", "Nom de room manquant.");
 
-function isAdmin(room, username) {
-  return roomAdmins.get(room) === username;
-}
-
-async function fetchAvatar(username) {
-  if (avatarsByUser.has(username)) return avatarsByUser.get(username);
-  const user = await UserModel.findOne({ username }).lean();
-  const avatar = user?.avatar || 'avatar1.svg';
-  avatarsByUser.set(username, avatar);
-  return avatar;
-}
-
-async function handleJoinRoom(socket, io, { room, password }) {
-  if (!room || !password) {
-    return socket.emit('errorMessage', 'Room ou mot de passe manquant.');
-  }
-
-  const username = socket.data.username;
-  const role = socket.data.role;
-
-  if (usersByRoom.has(room)) {
-    const hashedPassword = roomPasswords.get(room);
-    const passwordMatch = await bcrypt.compare(password, hashedPassword);
-    if (!passwordMatch) {
-      return socket.emit('errorMessage', 'Mot de passe incorrect pour cette room.');
+    const exists = roomPasswords.has(room);
+    if (exists) {
+      const hashed = roomPasswords.get(room);
+      if (!password) return socket.emit("errorMessage", "Mot de passe requis.");
+      const ok = await bcrypt.compare(password, hashed);
+      if (!ok) return socket.emit("errorMessage", "Mot de passe incorrect.");
+    } else {
+      const hashedPwd = await bcrypt.hash(password || "", 10);
+      createRoom(room, hashedPwd, username);
     }
-    if (usersByRoom.get(room).has(username)) {
-      return socket.emit('errorMessage', 'Ce pseudo est déjà utilisé dans cette room.');
+
+    socket.join(room);
+    currentRoom = room;
+
+    const set = usersByRoom.get(room);
+    set.add(username);
+
+    const avatar = await fetchAvatar(username);
+    avatarsByUser.set(username, avatar);
+
+    const history = await Message.find({ room }).sort({ createdAt: 1 }).lean();
+    socket.emit("chatHistory", history);
+
+    io.to(room).emit("notification", `${username} a rejoint la room.`);
+    emitUserList(io, room);
+
+    // Si quiz actif, envoyer la question en cours et le temps restant
+    const quiz = quizzesByRoom.get(room);
+    if (quiz && quiz.currentQuestion != null) {
+      const endTime = quiz.questionEndTime || Date.now();
+      socket.emit("startQuiz", { questions: quiz.questions, endTime });
     }
-  } else {
-    if (role !== 'admin') {
-      return socket.emit('errorMessage', 'Seul un admin peut créer une nouvelle room.');
-    }
-    const hashed = await bcrypt.hash(password, 10);
-    roomPasswords.set(room, hashed);
-    roomAdmins.set(room, username);
-    usersByRoom.set(room, new Set());
-  }
-
-  await fetchAvatar(username);
-
-  socket.join(room);
-  socket.data.room = room;
-  usersByRoom.get(room).add(username);
-
-  emitUserList(io, room);
-  io.to(room).emit('notification', `${username} a rejoint la room.`);
-  socket.to(room).emit('chatMessage', { user: 'System', message: `${username} a rejoint la room.` });
-
-  const lastMessages = await MessageModel.find({ room }).sort({ createdAt: -1 }).limit(3).lean();
-  socket.emit('chatHistory', lastMessages.reverse());
-}
-
-async function handleSendMessage(socket, io, { room, message }) {
-  if (!room || !message) return;
-  const username = socket.data.username;
-
-  const msg = new MessageModel({
-    room,
-    user: username,
-    message,
-    createdAt: new Date()
   });
-  await msg.save();
-  io.to(room).emit('chatMessage', { user: username, message, createdAt: msg.createdAt });
-}
 
-function handleTyping(socket, io, room) {
-  const username = socket.data.username;
-  if (room) io.to(room).emit('typing', username);
-}
+  // ==== CHAT ====
+  socket.on("sendMessage", async ({ room, message }) => {
+    if (!room || !message) return;
+    await Message.create({ room, user: username, message });
+    io.to(room).emit("chatMessage", { user: username, message, createdAt: new Date() });
+  });
 
-function cleanupRoom(room) {
-  usersByRoom.delete(room);
-  roomPasswords.delete(room);
-  roomAdmins.delete(room);
-  quizzesByRoom.delete(room);
-}
+  socket.on("typing", room => {
+    io.to(room).emit("typing", username);
+  });
 
-function cleanupUserFromRoom(username, room) {
-  const usersSet = usersByRoom.get(room);
-  if (!usersSet) return;
+  // ==== START QUIZ (ADMIN) ====
+  socket.on("startQuiz", async () => {
+    if (!currentRoom || !isAdmin(currentRoom, username)) return socket.emit("errorMessage", "Seul l'admin peut lancer un quiz.");
 
-  usersSet.delete(username);
-  if (usersSet.size === 0) {
-    cleanupRoom(room);
-  }
-  avatarsByUser.delete(username);
-}
+    const { questions } = await createQuizForRoom(currentRoom);
+    initQuizStorage(quizzesByRoom, currentRoom, questions);
 
-async function handleCloseRoom(socket, io, room) {
-  const username = socket.data.username;
-  if (!isAdmin(room, username)) {
-    return socket.emit('errorMessage', 'Seul l’admin peut fermer la room.');
-  }
+    const quiz = quizzesByRoom.get(currentRoom);
+    quiz.currentQuestion = 0;
+    quiz.questionEndTime = Date.now() + 15000; // 15s pour la première question
 
-  io.to(room).emit('notification', 'La room a été fermée par l’admin.');
-  io.in(room).socketsLeave(room);
-  cleanupRoom(room);
-}
+    io.to(currentRoom).emit("startQuiz", { questions: quiz.questions, endTime: quiz.questionEndTime });
 
-function calculateScoresAndEmit(io, room) {
-  const quiz = quizzesByRoom.get(room);
-  if (!quiz) return;
+    // Lance le timer serveur
+    startServerTimer(io, currentRoom);
+  });
 
-  const allCorrected = quiz.correctionResults.every(Boolean);
-  if (!allCorrected) return;
+  // ==== SUBMIT ANSWER ====
+  socket.on("submitAnswer", ({ qIndex, answerIndex }) => {
+    if (!currentRoom) return;
+    const saved = storeAnswer(quizzesByRoom, currentRoom, username, qIndex, answerIndex);
+    if (!saved) socket.emit("errorMessage", "Réponse déjà envoyée ou quiz non actif.");
+  });
 
-  const questions = quiz.questions;
+  // ==== START CORRECTION (ADMIN) ====
+  socket.on("startCorrection", async () => {
+    if (!currentRoom || !isAdmin(currentRoom, username)) return;
 
-  Object.entries(quiz.answers).forEach(([user, answers]) => {
-    let score = 0;
-    answers.forEach((a, i) => {
-      if (a !== undefined && quiz.correctionResults[i] && a === questions[i]?.correctAnswerIndex) {
-        score++;
+    const quiz = quizzesByRoom.get(currentRoom);
+    if (!quiz) return;
+
+    io.to(currentRoom).emit("startCorrection", { questions: quiz.questions, userAnswers: quiz.answers });
+
+    const scores = await computeFinalScores(quizzesByRoom, currentRoom);
+    io.to(currentRoom).emit("showScores", scores);
+
+    const ranking = Object.entries(scores)
+      .sort((a,b)=>b[1]-a[1])
+      .map(([u,s])=>({ user:u, score:s }));
+    io.to(currentRoom).emit("quizRanking", ranking);
+  });
+
+  // ==== CLOSE ROOM (ADMIN) ====
+socket.on("closeRoom", () => {
+    if (!currentRoom || !isAdmin(currentRoom, username)) return;
+
+    const room = currentRoom;
+
+    // Notifier tout le monde et stopper le quiz
+    io.to(room).emit("roomClosed", "La room a été fermée par l'admin");
+
+    // Déconnecter tous les sockets de la room
+    io.socketsLeave(room);
+
+    // Nettoyer toutes les données côté serveur
+    cleanupUserFromRoom(username, room);
+    quizzesByRoom.delete(room);
+    roomPasswords.delete(room);
+    roomAdmins.delete(room);
+    usersByRoom.delete(room);
+});
+
+
+
+
+  // ==== DISCONNECT ====
+  socket.on("disconnect", () => {
+    if (!currentRoom) return;
+    cleanupUserFromRoom(username, currentRoom);
+    io.to(currentRoom).emit("notification", `${username} a quitté la room.`);
+    emitUserList(io, currentRoom);
+  });
+
+
+  // ==== TIMER SERVEUR PAR QUESTION ====
+  function startServerTimer(io, roomName){
+    const quiz = quizzesByRoom.get(roomName);
+    if(!quiz) return;
+
+    if(questionTimer) clearTimeout(questionTimer);
+
+    questionTimer = setTimeout(()=>{
+      const qIndex = quiz.currentQuestion;
+      // Pour tous ceux qui n'ont pas répondu
+      for(const username in quiz.answers){
+        if(quiz.answers[username][qIndex] === null){
+          storeAnswer(quizzesByRoom, roomName, username, qIndex, null);
+        }
       }
-    });
-    quiz.scores[user] = score;
-  });
 
-  const ranking = Object.entries(quiz.scores)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 55)
-    .map(([user, score], idx) => ({ rank: idx + 1, user, score }));
-
-  quiz.correctionStarted = false;
-
-  io.to(room).emit('answerCorrectionResult', {
-    correct: true,
-    lastAnswerToCorrect: true,
-    finalScores: quiz.scores,
-  });
-
-  io.to(room).emit('quizRanking', ranking);
-}
-
-async function handleStartQuiz(socket, io) {
-  const room = socket.data.room;
-  const username = socket.data.username;
-
-  if (!isAdmin(room, username)) {
-    return socket.emit('errorMessage', 'Seul l’admin peut démarrer le quiz.');
+      // Passage à la question suivante
+      if(qIndex < quiz.questions.length -1){
+        quiz.currentQuestion++;
+        quiz.questionEndTime = Date.now() + 15000; // 15s pour la suivante
+        io.to(roomName).emit("startQuiz", { questions: quiz.questions, endTime: quiz.questionEndTime });
+        startServerTimer(io, roomName);
+      } else {
+        // Fin du quiz
+        quiz.currentQuestion = null;
+        quiz.questionEndTime = null;
+        io.to(roomName).emit("endQuiz");
+        // Calcul classement final
+        computeFinalScores(quizzesByRoom, roomName).then(scores=>{
+          io.to(roomName).emit("showScores", scores);
+          const ranking = Object.entries(scores)
+            .sort((a,b)=>b[1]-a[1])
+            .map(([u,s])=>({ user:u, score:s }));
+          io.to(roomName).emit("quizRanking", ranking);
+        });
+      }
+    }, 15000);
   }
-
-  const questions = await QuestionModel.aggregate([{ $sample: { size: 30 } }]);
-  if (!questions.length) {
-    return socket.emit('errorMessage', 'Aucune question disponible dans la base de données.');
-  }
-
-  quizzesByRoom.set(room, {
-    questions,
-    answers: {},
-    scores: {},
-    currentCorrectionIndex: 0,
-    correctionStarted: false,
-    correctionResults: new Array(questions.length).fill(false),
-    validatedAnswers: {}
-  });
-
-  io.to(room).emit('quizReady', { questionsCount: questions.length });
-  io.to(room).emit('startQuiz', questions);
-  io.to(room).emit('notification', 'Le quiz commence !');
-}
-
-function handleSubmitAnswer(socket, data) {
-  const room = socket.data.room;
-  const username = socket.data.username;
-
-  if (!room) return;
-
-  const quiz = quizzesByRoom.get(room);
-  if (!quiz) return;
-
-  const { qIndex, answerIndex } = data;
-  if (!Number.isInteger(qIndex) || (answerIndex !== null && !Number.isInteger(answerIndex))) return;
-
-  if (!quiz.answers[username]) quiz.answers[username] = [];
-
-  if (quiz.answers[username][qIndex] !== undefined) return;
-
-  quiz.answers[username][qIndex] = answerIndex;
-  quiz.correctionResults[qIndex] = true;
-
-  calculateScoresAndEmit(socket.server, room);
-}
-
-function handleCorrectionStep(socket, io, direction) {
-  const room = socket.data.room;
-  const username = socket.data.username;
-
-  if (!isAdmin(room, username)) {
-    return socket.emit('errorMessage', `Seul l’admin peut ${direction === 1 ? 'avancer' : 'revenir en arrière'} dans la correction.`);
-  }
-
-  const quiz = quizzesByRoom.get(room);
-  if (!room || !quiz || !quiz.correctionStarted) return;
-
-  if (direction === -1 && quiz.currentCorrectionIndex === 0) {
-    return socket.emit('errorMessage', 'Déjà à la première question.');
-  }
-
-  if (direction === 1 && quiz.currentCorrectionIndex + 1 >= quiz.questions.length) {
-    // Fin de correction, calcul scores et émission
-    calculateScoresAndEmit(io, room);
-    return;
-  }
-
-  quiz.currentCorrectionIndex += direction;
-  const idx = quiz.currentCorrectionIndex;
-
-  const event = direction === 1 ? 'nextCorrection' : 'previousCorrection';
-  io.to(room).emit(event, {
-    questionIndex: idx,
-    question: quiz.questions[idx],
-    userAnswers: quiz.answers,
-  });
-}
-
-function handleStartCorrection(socket, io) {
-  const room = socket.data.room;
-  const role = socket.data.role;
-
-  if (!room || role !== 'admin') return;
-
-  const quiz = quizzesByRoom.get(room);
-  if (!quiz) return;
-
-  quiz.correctionStarted = true;
-  quiz.currentCorrectionIndex = 0;
-  quiz.correctionResults = new Array(quiz.questions.length).fill(false);
-
-  io.to(room).emit('startCorrection', {
-    questions: quiz.questions,
-    userAnswers: quiz.answers,
-  });
-}
-
-function handleEndCorrection(socket, io) {
-  const room = socket.data.room;
-  const username = socket.data.username;
-
-  if (!isAdmin(room, username)) {
-    return socket.emit('errorMessage', 'Seul l’admin peut terminer la correction.');
-  }
-
-  const quiz = quizzesByRoom.get(room);
-  if (!room || !quiz || !quiz.correctionStarted) return;
-
-  const questions = quiz.questions;
-
-  Object.entries(quiz.answers).forEach(([user, answers]) => {
-    let score = 0;
-    answers.forEach((a, i) => {
-      if (a !== undefined && a === questions[i]?.correctAnswerIndex) score++;
-    });
-    quiz.scores[user] = score;
-  });
-
-  const ranking = Object.entries(quiz.scores)
-    .sort(([, a], [, b]) => b - a)
-    .map(([user, score], idx) => ({ rank: idx + 1, user, score }));
-
-  io.to(room).emit('notification', 'Correction terminée ! Voici les scores finaux.');
-  io.to(room).emit('showScores', quiz.scores);
-  io.to(room).emit('quizRanking', ranking);
-
-  quiz.correctionStarted = false;
-}
-
-async function handleRoomSockets(socket, io, username, role) {
-  try {
-    const safeUsername = username || 'Invité';
-    socket.data.username = safeUsername;
-    socket.data.role = role;
-
-    socket.on('joinRoom', data => handleJoinRoom(socket, io, data));
-
-    socket.on('sendMessage', data => handleSendMessage(socket, io, data));
-
-    socket.on('typing', room => handleTyping(socket, io, room));
-
-    socket.on('closeRoom', room => handleCloseRoom(socket, io, room));
-
-    socket.on('disconnect', () => {
-      const room = socket.data.room;
-      if (!room || !usersByRoom.has(room)) return;
-
-      cleanupUserFromRoom(safeUsername, room);
-      emitUserList(io, room);
-      io.to(room).emit('notification', `${safeUsername} a quitté la room.`);
-      socket.to(room).emit('chatMessage', { user: 'System', message: `${safeUsername} a quitté la room.` });
-    });
-
-    // Quiz events
-    socket.on('startQuiz', () => handleStartQuiz(socket, io));
-    socket.on('submitAnswer', data => handleSubmitAnswer(socket, data));
-    socket.on('startCorrection', () => handleStartCorrection(socket, io));
-    socket.on('endCorrection', () => handleEndCorrection(socket, io));
-    socket.on('previousCorrection', () => handleCorrectionStep(socket, io, -1));
-    socket.on('nextCorrection', () => handleCorrectionStep(socket, io, 1));
-
-  } catch (error) {
-    console.error('Erreur dans handleRoomSockets:', error);
-    socket.emit('errorMessage', 'Une erreur est survenue côté serveur.');
-  }
-}
-
-module.exports = { handleRoomSockets };
+};

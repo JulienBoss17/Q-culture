@@ -6,547 +6,86 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
-  <script src="/socket.io/socket.io.js"></script>
   <link rel="stylesheet" href="/style.css" />
   <link rel="stylesheet" href="/styleroom.css">
+  <script src="/socket.io/socket.io.js"></script>
 </head>
-
 <body>
   <%- include('partials/navbar') %>
 
-    <div class="decorations">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/b/be/Gamepad.svg" alt="manette" class="decor-icon icon-gamepad" />
-      <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/Trophy.svg" alt="trophée" class="decor-icon icon-trophy" />
-      <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Globe.svg" alt="globe" class="decor-icon icon-globe" />
-    </div>
+  <div class="decorations">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/b/be/Gamepad.svg" alt="manette" class="decor-icon icon-gamepad" />
+    <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/Trophy.svg" alt="trophée" class="decor-icon icon-trophy" />
+    <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Globe.svg" alt="globe" class="decor-icon icon-globe" />
+  </div>
 
-    
+  <!-- Boutons admin -->
   <button id="close-room-btn" style="display:none;">Fermer la room</button>
-
   <div id="lobby">
     <h2>Lobby</h2>
-    <div id="waiting-message">En attente du démarrage du quiz par l’admin...</div>
+    <div id="waiting-message">En attente du démarrage du quiz...</div>
     <button id="start-quiz-btn" style="display: none;">Lancer le quiz</button>
   </div>
 
+  <!-- Password prompt -->
   <div id="password-prompt" role="dialog" aria-modal="true" aria-labelledby="password-label">
-    <label id="password-label" for="password-input">Entrez le mot de passe de la room :</label>
-    <input type="password" id="password-input" placeholder="Mot de passe..." autocomplete="off" aria-required="true" />
-    <button id="join-room-btn" type="button">Rejoindre</button>
+    <label id="password-label" for="password-input">Entrez le mot de passe :</label>
+    <input type="password" id="password-input" placeholder="Mot de passe..." autocomplete="off" />
+    <button id="join-room-btn">Rejoindre</button>
   </div>
 
-  <div id="container" style="display:none">
-    <div id="main-quiz" style="display: none;" aria-live="polite" role="region" aria-label="Quiz principal">
-      <div id="quiz-info" style="margin-bottom: 10px; font-weight:bold;"></div>
-      <div id="question-timer" style="font-weight: bold; color: red;"></div>
-      <div id="question-container" ></div>
+  <!-- Conteneur principal -->
+  <div id="container" style="display:none;">
+    <!-- Quiz -->
+    <div id="main-quiz" style="display:none;">
+      <div id="quiz-info"></div>
+      <div id="question-timer"></div>
+      <div id="question-container"></div>
       <div id="answers-container"></div>
       <button id="submit-answer" disabled>Valider ma réponse</button>
-      <div id="quiz-notification" style="color: green;"></div>
-      <div id="quiz-scores" style="font-weight: bold;"></div>
+      <div id="quiz-notification"></div>
+      <div id="quiz-scores"></div>
     </div>
 
+    <!-- Correction -->
     <div id="correction-panel" style="display:none;">
-      <h3>Vue sur les réponses</h3>
+      <h3>Correction</h3>
       <div id="correction-question"></div>
-      <div id="correction-user-answers" style="overflow-y: auto; border:1px solid #ddd;"></div>
-      <button id="prev-correction-btn" disabled>Question précédente</button>
-      <button id="next-correction-btn">Question suivante</button>
-      <div id="correction-status" style="color: green;"></div>
+      <div id="correction-user-answers"></div>
+      <button id="prev-correction-btn" disabled>Précédent</button>
+      <button id="next-correction-btn">Suivant</button>
+      <div id="correction-status"></div>
     </div>
 
-    <div id="final-ranking" class="overlay" style="display:none;">
-      <h3>Classement final des joueurs</h3>
+    <!-- Classement -->
+    <div id="final-ranking" style="display:none;">
+      <h3>Classement final</h3>
       <table id="ranking-table">
         <thead>
-          <tr>
-            <th>Rank</th>
-            <th>Joueur</th>
-            <th>Score</th>
-          </tr>
+          <tr><th>Rang</th><th>Utilisateur</th><th>Score</th></tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
 
+    <!-- Right panel -->
     <div id="right-panel">
-      <div id="user-list" style="display:none;">Chargement des utilisateurs...</div>
+      <div id="user-list" style="display:none;"></div>
       <div id="chat-box" style="display:none;"></div>
-      <!-- On peut supprimer le div typing-indicator si on n'en veut plus -->
-      <!-- <div id="typing-indicator"></div> -->
       <form id="chat-form" style="display:none;">
         <input type="text" id="msg" placeholder="Écris un message..." autocomplete="off" />
         <button type="submit">Envoyer</button>
       </form>
     </div>
-
   </div>
 
   <canvas id="backgroundCanvas"></canvas>
-    <script src="/scripthome.js"></script>
-  <script>
-    const roomName = "<%= roomName %>";
-    const userRole = "<%= user.role %>";
-    const socket = io({ withCredentials: true });
 
-    const chatBox = document.getElementById("chat-box");
-    const userListContainer = document.getElementById("user-list");
-    const typingIndicator = document.getElementById("typing-indicator");
-    const form = document.getElementById("chat-form");
-    const input = document.getElementById("msg");
-    const passwordPrompt = document.getElementById("password-prompt");
-    const passwordInput = document.getElementById("password-input");
-    const joinRoomBtn = document.getElementById("join-room-btn");
-    const closeRoomBtn = document.getElementById("close-room-btn");
-    const container = document.getElementById("container");
-    const startQuizBtn = document.getElementById("start-quiz-btn");
+  <input type="hidden" id="roomName" value="<%= roomName %>">
+  <input type="hidden" id="userRole" value="<%= user.role %>">
 
-    const mainQuiz = document.getElementById("main-quiz");
-    const quizInfo = document.getElementById("quiz-info");
-    const questionContainer = document.getElementById("question-container");
-    const answersContainer = document.getElementById("answers-container");
-    const submitAnswerBtn = document.getElementById("submit-answer");
-    const quizNotification = document.getElementById("quiz-notification");
-    const quizScores = document.getElementById("quiz-scores");
-
-    const correctionPanel = document.getElementById("correction-panel");
-    const correctionQuestion = document.getElementById("correction-question");
-    const correctionUserAnswers = document.getElementById("correction-user-answers");
-    const prevCorrectionBtn = document.getElementById("prev-correction-btn");
-    const nextCorrectionBtn = document.getElementById("next-correction-btn");
-    // const validateCorrectionBtn = document.getElementById("validate-correction-btn");
-    const correctionStatus = document.getElementById("correction-status");
-
-    // Variables
-    let quizQuestions = [];
-    let currentQuestionIndex = 0;
-    let userAnswers = []; 
-    let questionTimer = null;
-    let canAnswer = true; 
-    let questionInterval = null;
-
-    // Fonction popup
-    function showPopup(message) {
-      const popup = document.createElement("div");
-      popup.className = "popup";
-      popup.textContent = message;
-      document.body.appendChild(popup);
-      setTimeout(() => popup.remove(), 3500);
-    }
-
-    // Join room
-    function joinRoom(password) {
-      socket.emit("joinRoom", { room: roomName, password });
-    }
-
-    joinRoomBtn.addEventListener("click", () => {
-      const pwd = passwordInput.value.trim();
-      if (!pwd) {
-        showPopup("Veuillez entrer un mot de passe.");
-        return;
-      }
-      joinRoom(pwd);
-    });
-
-    passwordInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        joinRoomBtn.click();
-      }
-    });
-
-    closeRoomBtn.addEventListener('click', () => {
-      socket.emit('closeRoom', roomName);
-    });
-
-    startQuizBtn.addEventListener('click', () => {
-      socket.emit('startQuiz');
-    });
-
-    socket.on("connect", () => {
-      console.log("Connecté, en attente du mot de passe pour rejoindre la room.");
-    });
-
-function formatTime(dateString) {
-  const date = new Date(dateString);
-  const hours = date.getHours().toString().padStart(2, "0");
-  const minutes = date.getMinutes().toString().padStart(2, "0");
-  return `${hours}:${minutes}`;
-}
-
-socket.on("chatHistory", (messages) => {
-  passwordPrompt.style.display = "none";
-  container.style.display = "flex";
-
-  chatBox.style.display = "block";
-  userListContainer.style.display = "block";
-  form.style.display = "flex";
-
-  chatBox.innerHTML = "";
-  messages.forEach(msg => {
-    const p = document.createElement("p");
-    const time = msg.createdAt ? `[${formatTime(msg.createdAt)}] ` : "";
-    p.textContent = `${time}${msg.user || 'Anonyme'}: ${msg.message}`;
-    chatBox.appendChild(p);
-  });
-  chatBox.scrollTop = chatBox.scrollHeight;
-
-  if (userRole === 'admin') {
-    closeRoomBtn.style.display = 'inline-block';
-    startQuizBtn.style.display = 'inline-block';
-  }
-});
-
-socket.on("chatMessage", (data) => {
-  const p = document.createElement("p");
-  const time = data.createdAt ? `[${formatTime(data.createdAt)}] ` : "";
-  p.textContent = `${time}${data.user || 'Anonyme'}: ${data.message}`;
-  if (data.user === 'System') p.classList.add('system');
-  chatBox.appendChild(p);
-  chatBox.scrollTop = chatBox.scrollHeight;
-});
-
-
-socket.on("userList", (users) => {
-  if (users.length === 0) {
-    userListContainer.textContent = "Aucun utilisateur dans la room.";
-  } else {
-    // On construit une seule chaîne avec virgules
-    const usersHtml = users.map(u => 
-      `<span style="display: inline-flex; align-items: center; gap: 8px; margin-right: 10px;">
-        <img src="/${u.avatar}" alt="${u.username}" style="width: 30px; height: 30px; border-radius: 50%;">
-        <strong>${u.username}</strong>
-      </span>`
-    ).join(", "); // <= séparateur virgule
-
-    userListContainer.innerHTML = `Utilisateurs dans la room (${users.length}) : <br>${usersHtml}`;
-  }
-});
-
-
-    socket.on("notification", (message) => {
-      showPopup(message);
-      if (message.includes('a été fermée par l’admin.')) {
-        setTimeout(() => {
-          window.location.href = '/'; 
-        }, 2000);
-      }
-    });
-
-    socket.on("errorMessage", (msg) => {
-      showPopup(msg);
-    });
-
-    let typingUsers = new Set();
-    let typingClearTimeout;
-
-    socket.on("typing", (user) => {
-      typingUsers.add(user);
-      updateTypingIndicator();
-
-      clearTimeout(typingClearTimeout);
-      typingClearTimeout = setTimeout(() => {
-        typingUsers.clear();
-        updateTypingIndicator();
-      }, 1000);
-    });
-
-
-function updateTypingIndicator() {
-  const users = Array.from(typingUsers);
-
-  if (users.length === 0) {
-    input.placeholder = "Écris un message...";
-  } else if (users.length === 1) {
-    input.placeholder = `${users[0]} est en train d’écrire...`;
-  } else if (users.length === 2) {
-    input.placeholder = `${users[0]} et ${users[1]} sont en train d’écrire...`;
-  } else {
-    input.placeholder = "Plusieurs personnes sont en train d’écrire...";
-  }
-}
-
-
-    form.addEventListener("submit", e => {
-      e.preventDefault();
-      const message = input.value.trim();
-      if (message) {
-        socket.emit("sendMessage", { room: roomName, message });
-        input.value = "";
-      }
-    });
-
-    input.addEventListener("input", () => {
-      socket.emit("typing", roomName);
-    });
-
-// === Quiz logic ===
-
-socket.on("startQuiz", (questions) => {
-  if (!questions?.length) {
-    showPopup("Aucune question disponible.");
-    return;
-  }
-
-  quizQuestions = questions;
-  currentQuestionIndex = 0;
-  userAnswers = new Array(quizQuestions.length).fill(null);
-  document.getElementById("lobby").style.display = "none";
-  mainQuiz.style.display = "block";
-  correctionPanel.style.display = "none";
-  quizNotification.textContent = "";
-  quizScores.textContent = "";
-
-  renderQuestion();
-  launchTimer();
-});
-
-function renderQuestion() {
-  const question = quizQuestions[currentQuestionIndex];
-  if (!question) return;
-
-  canAnswer = true;
-  quizInfo.textContent = `Question ${currentQuestionIndex + 1} / ${quizQuestions.length}`;
-  
-  questionContainer.innerHTML = "";
-
-  const questionTextElem = document.createElement("p");
-  questionTextElem.textContent = question.text;
-  questionContainer.appendChild(questionTextElem);
-
-if (Array.isArray(question.media) && question.media.length > 0) {
-  question.media.forEach(m => {
-    let mediaElem;
-    if (m.type === "image") {
-      mediaElem = document.createElement("img");
-      mediaElem.src = m.url;
-      mediaElem.alt = "Image liée à la question";
-      mediaElem.style.maxWidth = "100%";
-      mediaElem.style.marginTop = "10px";
-    } else if (m.type === "audio") {
-      mediaElem = document.createElement("audio");
-      mediaElem.src = m.url;
-      mediaElem.controls = true;
-      mediaElem.style.display = "block";
-      mediaElem.style.marginTop = "10px";
-    } else if (m.type === "video") {
-      mediaElem = document.createElement("video");
-      mediaElem.src = m.url;
-      mediaElem.controls = true;
-      mediaElem.style.display = "block";
-      mediaElem.style.maxWidth = "100%";
-      mediaElem.style.marginTop = "10px";
-    }
-
-    if (mediaElem) {
-      questionContainer.appendChild(mediaElem);
-    }
-  });
-}
-
-
-  quizNotification.textContent = "";
-
-  answersContainer.innerHTML = "";
-  question.answers.forEach((answer, idx) => {
-    const btn = document.createElement("button");
-    btn.className = "answer-btn";
-    btn.textContent = answer;
-    btn.dataset.index = idx;
-    btn.disabled = false;
-
-    if (userAnswers[currentQuestionIndex] !== null) {
-      btn.disabled = true;
-      if (userAnswers[currentQuestionIndex] === idx) {
-        btn.style.backgroundColor = "#ccc";
-      }
-    }
-
-    btn.onclick = () => {
-      if (!canAnswer) return;
-
-      document.querySelectorAll(".answer-btn").forEach(b => {
-        b.disabled = false;
-        b.removeAttribute("data-selected");
-        b.style.backgroundColor = "";
-      });
-
-      btn.dataset.selected = "true";
-      btn.disabled = true;
-      btn.style.backgroundColor = "#ddd";
-      submitAnswerBtn.disabled = false;
-    };
-
-    answersContainer.appendChild(btn);
-  });
-
-  submitAnswerBtn.disabled = userAnswers[currentQuestionIndex] !== null;
-}
-
-
-submitAnswerBtn.addEventListener("click", () => {
-  if (!canAnswer) return;
-
-  const selected = document.querySelector(".answer-btn[data-selected='true']");
-  if (!selected) return;
-
-  const index = Number(selected.dataset.index);
-  socket.emit("submitAnswer", { qIndex: currentQuestionIndex, answerIndex: index });
-
-  userAnswers[currentQuestionIndex] = index;
-  submitAnswerBtn.disabled = true;
-  canAnswer = false;
-  quizNotification.textContent = "Réponse enregistrée.";
-
-  // NE PAS passer à la question suivante ici !
-  // On attend la fin du timer pour changer la question.
-});
-
-
-
-function launchTimer() {
-  clearTimeout(questionTimer);
-  clearInterval(questionInterval); 
-
-  const timerDisplay = document.getElementById("question-timer");
-  let remaining = 15;
-  timerDisplay.textContent = `Temps restant : ${remaining} s`;
-
-  questionInterval = setInterval(() => {
-    remaining--;
-    if (remaining <= 0) {
-      clearInterval(questionInterval);
-    } else {
-      timerDisplay.textContent = `Temps restant : ${remaining} s`;
-    }
-  }, 1000);
-
-questionTimer = setTimeout(() => {
-  clearInterval(questionInterval);
-  canAnswer = false;
-  submitAnswerBtn.disabled = true;
-
-  if (userAnswers[currentQuestionIndex] === null) {
-    socket.emit("submitAnswer", { qIndex: currentQuestionIndex, answerIndex: null });
-  }
-
-  if (currentQuestionIndex < quizQuestions.length - 1) {
-    currentQuestionIndex++;
-    renderQuestion();
-    launchTimer();
-  } else {
-    socket.emit("startCorrection");
-    mainQuiz.style.display = "none";
-  }
-}, 15000);
-
-}
-
-
-
-// === CORRECTION LOGIC ===
-
-let allUserAnswers = {};
-let currentCorrectionIndex = 0;
-
-socket.on("startCorrection", (data) => {
-  if (userRole !== "admin") return;
-
-  mainQuiz.style.display = "none";
-  correctionPanel.style.display = "block";
-  correctionStatus.textContent = "";
-  correctionQuestion.textContent = "";
-  correctionUserAnswers.innerHTML = "";
-
-  currentCorrectionIndex = 0;
-  quizQuestions = data.questions;
-  allUserAnswers = data.userAnswers;
-
-  renderCorrectionQuestion();
-});
-
-function renderCorrectionQuestion() {
-  const q = quizQuestions[currentCorrectionIndex];
-  correctionQuestion.textContent = `Q${currentCorrectionIndex + 1}: ${q.text}`;
-  correctionUserAnswers.innerHTML = "";
-
-  for (const [username, answers] of Object.entries(allUserAnswers)) {
-    const answerIndex = answers[currentCorrectionIndex];
-    const userDiv = document.createElement("div");
-    userDiv.style.marginBottom = "10px";
-
-    const answerText = typeof answerIndex === "number" ? q.answers[answerIndex] : "Pas de réponse";
-
-    userDiv.innerHTML = `<strong>${username} :</strong> ${answerText}`;
-    correctionUserAnswers.appendChild(userDiv);
-  }
-
-  prevCorrectionBtn.disabled = currentCorrectionIndex === 0;
-  nextCorrectionBtn.disabled = currentCorrectionIndex === quizQuestions.length - 1;
-}
-
-prevCorrectionBtn.addEventListener("click", () => {
-  if (currentCorrectionIndex > 0) {
-    currentCorrectionIndex--;
-    renderCorrectionQuestion();
-  }
-});
-
-nextCorrectionBtn.addEventListener("click", () => {
-  if (currentCorrectionIndex < quizQuestions.length - 1) {
-    currentCorrectionIndex++;
-    renderCorrectionQuestion();
-  }
-});
-
-// validateCorrectionBtn.addEventListener("click", () => {
-//   correctionStatus.textContent = `Question ${currentCorrectionIndex + 1} validée.`;
-  
-//   // Envoi de la validation au serveur
-//   socket.emit("validateCorrectionAnswer", { questionIndex: currentCorrectionIndex });
-  
-//   // Nettoyer le message après 2s
-//   setTimeout(() => correctionStatus.textContent = "", 2000);
-// });
-
-
-socket.on("quizRanking", (ranking) => {
-  mainQuiz.style.display = "none";
-  correctionPanel.style.display = "none";
-
-  const rankingDiv = document.getElementById("final-ranking");
-  const tbody = document.querySelector("#ranking-table tbody");
-
-  tbody.innerHTML = ""; 
-
-  ranking.forEach(({ rank, user, score }) => {
-    const tr = document.createElement("tr");
-
-    const tdRank = document.createElement("td");
-    tdRank.textContent = rank;
-    tdRank.style.padding = "5px";
-    tdRank.style.textAlign = "center";
-
-    const tdUser = document.createElement("td");
-    tdUser.textContent = user;
-    tdUser.style.padding = "5px";
-
-    const tdScore = document.createElement("td");
-    tdScore.textContent = score;
-    tdScore.style.padding = "5px";
-    tdScore.style.textAlign = "center";
-
-    tr.appendChild(tdRank);
-    tr.appendChild(tdUser);
-    tr.appendChild(tdScore);
-
-    tbody.appendChild(tr);
-  });
-
-  rankingDiv.style.display = "block";
-});
-
-
-  </script>
+  <!-- Scripts modulaire séparés -->
+  <script src="/js/room.js"></script>
+  <script src="/js/quiz.js"></script>
 </body>
-
 </html>

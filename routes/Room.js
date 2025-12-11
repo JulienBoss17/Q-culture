@@ -1,11 +1,21 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
+const User = require('../models/User');
 
-// Page de création ou d'entrée dans une room
-router.get("/room/:roomName", (req, res) => {
+router.get("/room/:roomName", async (req, res) => {
   if (!req.session.userId) return res.redirect("/login");
+
+  const user = await User.findById(req.session.userId);
+  if (!user) return res.redirect("/login");
+
   const roomName = req.params.roomName;
-  res.render("room", { roomName, currentPath: req.path });
+  const userRole = user.role || "participant";
+
+  res.render("room", {
+    roomName,
+    userRole,
+    user
+  });
 });
 
 module.exports = router;

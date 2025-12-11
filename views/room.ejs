@@ -10,8 +10,16 @@
   <link rel="stylesheet" href="/styleroom.css">
   <script src="/socket.io/socket.io.js"></script>
 </head>
+<style>
+  .navbar-container {
+margin-bottom: 30px;
+  }
+</style>
 <body>
-  <%- include('partials/navbar') %>
+  <div class="navbar-container">
+
+    <%- include('partials/navbar') %>
+  </div>
 
   <div class="decorations">
     <img src="https://upload.wikimedia.org/wikipedia/commons/b/be/Gamepad.svg" alt="manette" class="decor-icon icon-gamepad" />
@@ -36,6 +44,7 @@
 
   <!-- Conteneur principal -->
   <div id="container" style="display:none;">
+
     <!-- Quiz -->
     <div id="main-quiz" style="display:none;">
       <div id="quiz-info"></div>
@@ -44,7 +53,6 @@
       <div id="answers-container"></div>
       <button id="submit-answer" disabled>Valider ma réponse</button>
       <div id="quiz-notification"></div>
-      <div id="quiz-scores"></div>
     </div>
 
     <!-- Correction -->
@@ -62,7 +70,11 @@
       <h3>Classement final</h3>
       <table id="ranking-table">
         <thead>
-          <tr><th>Rang</th><th>Utilisateur</th><th>Score</th></tr>
+          <tr>
+            <th>Rang</th>
+            <th>Utilisateur</th>
+            <th>Score</th>
+          </tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -84,8 +96,23 @@
   <input type="hidden" id="roomName" value="<%= roomName %>">
   <input type="hidden" id="userRole" value="<%= user.role %>">
 
-  <!-- Scripts modulaire séparés -->
+  <!-- Scripts modulaires -->
   <script src="/js/room.js"></script>
   <script src="/js/quiz.js"></script>
+    <script src="/js/scripthome.js"></script>
+
+  <script>
+    // Mettre à jour le tableau de classement final quand le serveur envoie "quizRanking"
+    socket.on("quizRanking", ranking => {
+      const tbody = document.querySelector("#ranking-table tbody");
+      tbody.innerHTML = "";
+      ranking.forEach((r, idx) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${idx+1}</td><td>${r.user}</td><td>${r.score}</td>`;
+        tbody.appendChild(tr);
+      });
+      document.getElementById("final-ranking").style.display = "block";
+    });
+  </script>
 </body>
 </html>

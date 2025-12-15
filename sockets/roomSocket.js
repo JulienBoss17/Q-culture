@@ -10,8 +10,10 @@ const {
   emitUserList,
   isAdmin,
   createRoom,
-  cleanupUserFromRoom
+  cleanupUserFromRoom,
+  checkRoomPassword // <-- Ajoute ici
 } = require('../managers/roomManager');
+
 const { createQuizForRoom, initQuizStorage, storeAnswer, computeFinalScores } = require('../managers/quizManager');
 
 module.exports = async function handleRoomSockets(socket, io, username, role){
@@ -21,17 +23,20 @@ module.exports = async function handleRoomSockets(socket, io, username, role){
   const QUESTION_DURATION=10000;
 
   // JOIN ROOM
-  socket.on("joinRoom", async ({ room, password })=>{
-    if(!room) return socket.emit("errorMessage","Nom de room manquant.");
-    const exists = roomPasswords.has(room);
-    if(exists){
-        const hashed = roomPasswords.get(room);
-        if(!password) return socket.emit("errorMessage","Mot de passe requis.");
-        const ok = await bcrypt.compare(password, hashed);
-        if(!ok) return socket.emit("errorMessage","Mot de passe incorrect.");
-    } else {
-        const hashedPwd = await bcrypt.hash(password||"",10);
-        createRoom(room, hashedPwd, username);
+socket.on("joinRoom", async ({ room, password }) => {
+    if (!room) return socket.emit("errorMessage", "Nom de room manquant.");
+
+    const roomExists = usersByRoom.has(room);
+
+    // room existe
+    if (roomExists) {
+        const ok = checkRoomPassword(room, password);
+        if (!ok) return socket.emit("errorMessage", "Mot de passe incorrect.");
+    }
+    // room n’existe pas -> seul l’admin peut créer
+    else {
+        if (role !== "admin") return socket.emit("errorMessage", "La room n’existe pas, seul l’admin peut la créer.");
+        createRoom(room, password, username);
     }
 
     socket.join(room);
@@ -41,17 +46,24 @@ module.exports = async function handleRoomSockets(socket, io, username, role){
     const avatar = await fetchAvatar(username);
     avatarsByUser.set(username, avatar);
 
-    const history = await Message.find({ room }).sort({ createdAt:1 }).lean();
+    const history = await Message.find({ room }).sort({ createdAt: 1 }).lean();
     socket.emit("chatHistory", history);
+
     io.to(room).emit("notification", `${username} a rejoint la room.`);
     emitUserList(io, room);
 
     const quiz = quizzesByRoom.get(room);
-    if(quiz && quiz.currentQuestion!=null){
+    if (quiz && quiz.currentQuestion != null) {
         const remainingTime = quiz.questionEndTime - Date.now();
         socket.emit("startQuiz", { questions: quiz.questions, endTime: Date.now() + remainingTime });
     }
-  });
+
+    // signal admin côté client pour afficher les boutons
+    if (isAdmin(room, username)) {
+        socket.emit("adminPrivileges");
+    }
+});
+
 
   // CHAT
   socket.on("sendMessage", async ({ room, message })=>{
@@ -60,7 +72,11 @@ module.exports = async function handleRoomSockets(socket, io, username, role){
     io.to(room).emit("chatMessage",{ user: username, message, createdAt: new Date() });
   });
 
-  socket.on("typing", room => io.to(room).emit("typing", username));
+// Typing indicator
+socket.on("typing", (room) => {
+    socket.to(room).emit("typing", username); // Envoie aux autres utilisateurs seulement
+});
+
 
   // START QUIZ (ADMIN)
   socket.on("startQuiz", async ()=>{

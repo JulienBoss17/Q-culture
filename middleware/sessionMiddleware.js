@@ -1,19 +1,26 @@
-const session = require('express-session');
-const MongoStore = require('connect-mongo');
-require('dotenv').config();
+const session = require("express-session");
+const MongoDBStore = require("connect-mongodb-session")(session);
+require("dotenv").config();
+
+const store = new MongoDBStore({
+  uri: process.env.MONGO_URI,
+  collection: "sessions",
+});
+
+// Gestion des erreurs du store
+store.on("error", (error) => {
+  console.error("Erreur MongoDB store (sessions):", error);
+});
 
 const sessionMiddleware = session({
   secret: process.env.SECRETSESSION,
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGO_URI,
-  }),
-  cookie: {
-    maxAge: 1000 * 60 * 60 * 1, // 1h
-    sameSite: 'lax', // 'lax' est bien pour localhost, sinon 'none' + secure:true pour prod HTTPS
-    // secure: true, // décommenter si HTTPS en prod
-  },
+  store: store,
+cookie: {
+  maxAge: 1000 * 60 * 60 * 1, // 1h
+  sameSite: 'lax',
+},
 });
 
 module.exports = sessionMiddleware;

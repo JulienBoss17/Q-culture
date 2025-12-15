@@ -130,6 +130,12 @@ socket.on("userList", users => {
     userListContainer.innerHTML = users.map(u => `<span><img src="/${u.avatar}" width="30" height="30" style="border-radius:50%"> <strong>${u.username}</strong></span>`).join(", ");
 });
 
+socket.on("adminPrivileges", () => {
+    closeRoomBtn.style.display = "inline-block";
+    startQuizBtn.style.display = "inline-block";
+});
+
+
 form.addEventListener("submit", e => {
     e.preventDefault();
     const message = input.value.trim();
@@ -138,4 +144,33 @@ form.addEventListener("submit", e => {
     input.value = "";
 });
 
-input.addEventListener("input", () => socket.emit("typing", roomName));
+// ==== ELEMENTS ====
+const typingIndicator = document.getElementById("typing-indicator");
+
+// ==== SOCKETS ====
+// Envoi de message
+form.addEventListener("submit", e => {
+    e.preventDefault();
+    const message = input.value.trim();
+    if(!message) return;
+    socket.emit("sendMessage", { room: roomName, message });
+    input.value = "";
+});
+
+// Typing indicator
+input.addEventListener("input", () => {
+    socket.emit("typing", roomName);
+});
+
+// Affichage typing
+socket.on("typing", username => {
+    typingIndicator.textContent = `${username} est en train d'écrire...`;
+
+    // Efface après 2 secondes
+    clearTimeout(typingIndicator.timeout);
+    typingIndicator.timeout = setTimeout(() => {
+        typingIndicator.textContent = "";
+    }, 2000);
+});
+
+

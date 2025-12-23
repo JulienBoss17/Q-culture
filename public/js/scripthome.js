@@ -175,15 +175,6 @@ window.addEventListener('resize', () => {
   });
 });
 
-let resizeTimeout;
-
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimeout);
-  resizeTimeout = setTimeout(() => {
-    location.reload();
-  }, 300);
-});
-
 window.addEventListener('load', () => {
   canvas.classList.add('active');
   document.body.classList.add('ready');
